@@ -2,6 +2,13 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from dotenv import load_dotenv
 import os
+from sqlalchemy.orm import DeclarativeBase #,
+
+
+#base for the users
+class Base(DeclarativeBase):
+    pass
+
 
 # LOAD ENV VARIABLES .env
 load_dotenv()

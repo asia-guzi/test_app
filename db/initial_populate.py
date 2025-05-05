@@ -1,4 +1,3 @@
-from tests.models import *
 from db.config import async_engine, async_session
 
 

@@ -4,5 +4,6 @@ pydantic
 pytest
 sqlalchemy
 dotenv
+passlib
 # pytest-asyncio
 # httpx

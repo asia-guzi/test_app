@@ -2,12 +2,7 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, PrimaryKeyConstraint
 from db.config import async_engine
-from sqlalchemy.orm import DeclarativeBase #,
-
-
-#base for the users
-class Base(DeclarativeBase):
-    pass
+from db.config import Base
 
 
 
@@ -38,19 +33,7 @@ class Answer(Base):
     # technical requirements of the relationship checked by check_valid_answers trigger
 #
 #
-# class Pupil(Base):
-#     __tablename__ = "pupils"
-#
-#     id = Column(Integer, primary_key=True, index=True)
-#     name
-#     surname
-#     birth date
-#     access do start test i do wynik test przydzielonego przez teacher
-#
-#
-# class Teacher(Pupil):
-#     __tablename__ = "teachers"
-#
+
 #
 #
 # class Test_output(Base):

@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request, status, HTTPException, Form
 from fastapi.responses import RedirectResponse, Response
 # from sqlalchemy.sql.annotation import Annotated
 from typing import Annotated
-from tests.schema import UserResponse, TestQuestion
+from quiz import UserResponse, TestQuestion
 # from sqlalchemy import func
 # from sqlalchemy.orm import joinedload, Session
 # from users.users import Question, Answer
