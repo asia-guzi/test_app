@@ -1,10 +1,14 @@
 
 
-from fastapi import FastAPI, Request, status, HTTPException, Form
+from fastapi import FastAPI, Request, status, HTTPException, Form, Depends
 from fastapi.responses import RedirectResponse, Response
+from fastapi.security import OAuth2PasswordBearer
+
 # from sqlalchemy.sql.annotation import Annotated
 from typing import Annotated
-from quiz import UserResponse, TestQuestion
+from quiz.schemas import UserResponse, TestQuestion
+from fastapi.security import OAuth2PasswordBearer
+
 # from sqlalchemy import func
 # from sqlalchemy.orm import joinedload, Session
 # from users.users import Question, Answer
@@ -12,6 +16,8 @@ from quiz import UserResponse, TestQuestion
 
 
 app = FastAPI()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 test_size = 3 #20 z user session, albo z model test - coś takiego
 
@@ -51,8 +57,8 @@ def index():
 
 @app.get('/start')
 #async
-def start_tests(response: Response):
-
+def start_tests(response: Response, token: Annotated[str, Depends(oauth2_scheme)]):
+       # return {"token": token}
     test_set = questions_sample #await get_questions()
     if len(test_set) < test_size:
         # response.status_code = status.HTTP_404_NOT_FOUND
