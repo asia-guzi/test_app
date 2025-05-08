@@ -1,12 +1,31 @@
 from pydantic import BaseModel
+from typing import List
+
+# from python_multipart.multipart import Field
+from uuid import uuid4
+from pydantic import BaseModel, Field
+
+from quiz.models import Question, Answer
+from time import time
+
 
 class UserResponse(BaseModel):
-    question_id: str
+    question_id:
     response_id: str
 
+
 class TestQuestion(BaseModel):
+    question_id:
     question: str
-    response: str
+    response: List[str]
+
+
+class TestSet(BaseModel):
+    questions: List[TestQuestion] = None
+    size = 20
+    true_ans = Field() 0
+    start_time = time()
+    id: str = Field(default_factory=lambda: uuid4().hex) #indywidualne id zeby zidentyfikowac set uzytkownika
 
 
 """
@@ -27,6 +46,5 @@ from datetime import datetime
 #     questions: int
 #     correct_ans: int
 #     date: datetime
-
 
 """

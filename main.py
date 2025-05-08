@@ -3,11 +3,14 @@
 from fastapi import FastAPI, Request, status, HTTPException, Form, Depends
 from fastapi.responses import RedirectResponse, Response
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from db.dependencies import get_session
 
-# from sqlalchemy.sql.annotation import Annotated
+# from sqlalchemy.sql.annotation import Annotated,
 from typing import Annotated
 from quiz.schemas import UserResponse, TestQuestion
 from fastapi.security import OAuth2PasswordBearer
+from quiz.services import TestSet
 
 # from sqlalchemy import func
 # from sqlalchemy.orm import joinedload, Session
@@ -19,25 +22,6 @@ app = FastAPI()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-test_size = 3 #20 z user session, albo z model test - coś takiego
-
-questions_sample = {
-    1: {
-        "question": "2+1",
-        "choices": [("5",False ), ("4", False), ("8",False ), ("3",True )]
-    },
-    2: {
-        "question": "2+2",
-        "choices": [("5",False ), ("4", True), ("8",False ), ("3",False )]
-    },
-    3: {
-        "question": "2+3",
-        "choices": [("5",True ), ("4", False), ("8",False ), ("3",False )]
-    }
-}
-
-question = questions_sample[1]
-print(question)
 
 @app.get('/')
 def index():
@@ -45,22 +29,15 @@ def index():
     return {'message' : 'Welcome to a test'}
 
 
-# async def get_questions():
-#
-#     return await ( #zamienic na execute query i doda
-#         session.query(Question)
-#         .options(joinedload(Question.answers))  #need a complet of Q + A
-#         .order_by(func.random()) #select questions from base at random
-#         .limit(test_size)
-#         .all()
-#     )
+
 
 @app.get('/start')
-#async
-def start_tests(response: Response, token: Annotated[str, Depends(oauth2_scheme)]):
+async def start_tests(response: Response
+                      ,token: Annotated[str, Depends(oauth2_scheme)]
+                      ,session : Session = Depends(get_session)):
        # return {"token": token}
-    test_set = questions_sample #await get_questions()
-    if len(test_set) < test_size:
+    test_set = await TestSet.get_test()
+    if len(test_set) < test_set.size:
         # response.status_code = status.HTTP_404_NOT_FOUND
         # return {'detail':'Test not avaiable'}
         # #nie trzeba zwracac response czy cos, starczy ze ustawie jej parametry ale mozna skrcic poprzez exception
@@ -87,7 +64,7 @@ def start_tests(response: Response, token: Annotated[str, Depends(oauth2_scheme)
 def pass_answers(id: int, request: Request, question : TestQuestion = None, response: Annotated[UserResponse, Form()] = None):
 
     if request.method == "GET":
-        question = questions_sample[id]
+        question = questions_sample[id-1]
         print(question)
         if id <= test_size:
             return question

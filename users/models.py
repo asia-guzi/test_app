@@ -1,8 +1,9 @@
 
 from sqlalchemy import Column, String, Integer
-from sqlalchemy.orm import
+from sqlalchemy.orm import relationship
 from db.config import Base
 from passlib.context import CryptContext
+from pydantic import BaseModel, EmailStr
 
 
 
@@ -21,8 +22,10 @@ class User(Base):
     name = Column(String)
     surname = Column(String)
     role = Column(String) #student / teacher
+    email = EmailStr
+    users = relationship("User", back_populates="tests")
 
-    #access do start test i do wynik test przydzielonego przez teacher
+#access do start test i do wynik test przydzielonego przez teacher
 
 
 
