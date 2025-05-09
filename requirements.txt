@@ -4,6 +4,7 @@ pydantic
 pytest
 sqlalchemy
 dotenv
-passlib
+passlib[bcrypt]
+pyjwt
 # pytest-asyncio
 # httpx
