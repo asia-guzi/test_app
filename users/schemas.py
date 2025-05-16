@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import Boolean
 
 
 class BaseUser(BaseModel):
@@ -12,8 +11,14 @@ class DbUser(BaseUser):
     id: int
     save_password: str  # hashed
     role: str = "student"
-    disabled : Boolean = False
+    disabled : bool = False
     # student / teacher -> teacher does not create account, he gets one created from asministrator, so by the side is omnly possible to create student
+
+    class Config():
+        from_attributes = True
+
+
+
 
 class GetUser(BaseUser):
     password: str

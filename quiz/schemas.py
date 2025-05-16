@@ -4,28 +4,93 @@ from typing import List
 # from python_multipart.multipart import Field
 from uuid import uuid4
 from pydantic import BaseModel, Field
+from sqlalchemy.sql.annotation import Annotated
 
 from quiz.models import Question, Answer
 from time import time
+from .config import TEST_SIZE
 
 
-class UserResponse(BaseModel):
-    question_id:
-    response_id: str
-
-
-class TestQuestion(BaseModel):
-    question_id:
+class BaseQuestion(BaseModel):
     question: str
-    response: List[str]
+
+    """
+    pozwala, aby Pydantic  model   mógł   być   używany   bezpośrednio   z   obiektami   ORM(np.SQLAlchemy).Oznacza
+    to, że   możesz   tworzyć   instancje   modelu   Pydantic   na   podstawie   obiektów   ORM
+    w   taki   sposób, jakby    pracowały   z   regularnymi   słownikami(dictionaries).   """
 
 
-class TestSet(BaseModel):
-    questions: List[TestQuestion] = None
-    size = 20
-    true_ans = Field() 0
-    start_time = time()
-    id: str = Field(default_factory=lambda: uuid4().hex) #indywidualne id zeby zidentyfikowac set uzytkownika
+class DbQuestion(BaseQuestion):
+    id: int
+    class Config:
+        from_attributes = True
+
+class BaseAnswer (BaseModel):
+    answer: str
+
+class ValidatedAnswer(BaseAnswer):
+    ans_validation: bool
+
+class DbAnswer(ValidatedAnswer):
+    id: int
+    question_id: int
+
+    class Config:
+        from_attributes = True  # Pozwala mapować odpowiedzi i pytania z ORM
+
+
+class GetQuestion(BaseQuestion):
+    response: list[BaseAnswer]
+
+    class Config:
+        from_attributes = True
+
+
+class UserResponse(BaseQuestion, BaseAnswer):
+    pass
+
+
+class AnsweredQuestion(BaseModel):
+    question: DbQuestion
+    answers: List[DbAnswer]
+
+    # class Config:
+    #     from_attributes = True  # Pozwala mapować odpowiedzi i pytania z ORM
+
+
+
+
+#
+# class TestSet(BaseModel):
+#     questions: List[AnsweredQuestion]
+#     size : int = TEST_SIZE
+#     state : int = 1
+#     true_ans = Field() 0
+#     start_time = time()
+#     #id: str = Field(default_factory=lambda: uuid4().hex) #indywidualne id zeby zidentyfikowac set uzytkownika
+#     user_id : str
+#
+
+#
+# class TestOutcome():
+#
+#
+#     users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+#     time_finish = Column(Time)
+#     outcome =
+#     user = relationship("User", back_populates="tests")
+
+# class Test_output(Base):
+#     __tablename__ = "test_outcomes"
+#
+#     id = Column(Integer, primary_key=True, autoincrement=True) #, index=True)
+#     users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+#     time_finish = Column(Time)
+#     outcome = Column(Float, nullable=False) #number of crrect answers / all questions
+#     user = relationship("User", back_populates="tests")
+#
+#
+
 
 
 """

@@ -1,0 +1,130 @@
+
+#test is avaialble only gor lohed in users, tgherefore the dependency get_current_active_user
+from typing import Annotated
+from fastapi import APIRouter, Depends, Response, HTTPException, status, Request
+from fastapi.responses import RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from users.services import AccessServices
+#from users.config import  oauth2_scheme
+from .services import TestService
+from .schemas import GetQuestion, UserResponse
+from db.dependencies import get_session
+from .config import TEST_SIZE
+from users.models import User
+
+
+
+
+# quiz_router = APIRouter(
+#     dependencies=[Depends(oauth2_scheme)]  # Globalne wymuszanie tokenu
+# )
+
+quiz_router = APIRouter(
+tags=['quiz'] #nie trzeba w kazdym z osobna, tylko mozna w routerze ustawic tags
+)
+current_user = User(nick='nick',save_password='pass')
+@quiz_router.get('/start') #, tags=['quiz'])
+async def start_tests( session : Annotated[AsyncSession, Depends(get_session) ]
+                      ):
+    # return {"token": token}
+    # """     #current_user: Annotated[str, Depends(AccessServices.get_current_active_user)]
+    #    session : Annotated[AsyncSession, Depends(get_session) ]
+    #    #, response: Response
+    #    #,token: Annotated[str, Depends(oauth2_scheme)]"""
+    #jesli jeszcze nie ma w sloniku - nie mozesz drugiego testu
+       # return current test
+    print('bt')
+
+    test_set = await TestService.create_test(current_user.nick, session)
+    print('at')
+
+    # test_set = await TestService.create_test(current_user, session)
+    if len(test_set.questions) < TEST_SIZE: #in case not enough questions in db ect
+            # response.status_code = status.HTTP_404_NOT_FOUND
+        # return {'detail':'Test not avaiable'}
+        # #nie trzeba zwracac response czy cos, starczy ze ustawie jej parametry ale mozna skrcic poprzez exception
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Test not avaiable")
+    return RedirectResponse('/question/1')
+
+
+
+    # for question in test_set:
+    #
+    #
+    #     print(f"Pytanie: {question.title}")
+    #     for answer in question.answers:  # Wszystko już jest w pamięci
+    #         print(f"- Odpowiedź: {answer.content}")
+    #         `
+    #
+    # # questions = await questions
+    # return test_set #questions
+
+
+
+# would it be better to distinguish on @app.get('/question/{id}') and @app.post('/question/{id}') -decided to distinguish
+@quiz_router.get('/question/{id}')#, response_model=GetQuestion, tags=['quiz']) #, methods=['GET', 'POST'])
+async def get_questions(id: int
+                 # , current_user: Annotated[str, Depends(AccessServices.get_current_active_user)]
+                  # , request: Request
+                  # , question : TestQuestion = None
+                  # , response: Annotated[UserResponse, Form()] = None
+                        ):
+
+    # if request.method == "GET":
+    return await TestService.get_question(user=current_user.nick, id=id)
+
+@quiz_router.post('/question/{id}', tags=['quiz']) #, methods=['GET', 'POST'])
+#async
+def pass_answers(id: int
+#, current_user: Annotated[str, Depends(AccessServices.get_current_active_user)]
+                # , request: Request
+                 , question : UserResponse
+                 #, response: Annotated[UserResponse, Form()] = None
+        ):
+    print(question)
+    return TestService.submit_answer(user='nick', id=id, question=question)
+
+
+#
+# # would it be better to distinguish on @app.get('/question/{id}') and @app.post('/question/{id}') -decided to distinguish
+# @app.api_route('/question/{id}', methods=['GET', 'POST'])
+# #async
+# def pass_answers(id: int, request: Request, question : TestQuestion = None, response: Annotated[UserResponse, Form()] = None):
+#
+#     if request.method == "GET":
+#         question = questions_sample[id-1]
+#         print(question)
+#         if id <= test_size:
+#             return question
+#         else:
+#             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+#
+#
+#
+#     if request.method == "POST":
+#
+#         print(response)
+#
+#         if id < test_size:
+#             return RedirectResponse(f'/question/{id+1}')
+#         elif id == test_size :
+#             return RedirectResponse('/end_test')
+#         else:
+#             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@quiz_router.post('/end_test', tags=['quiz'])
+async def finish( #current_user: Annotated[str, Depends(AccessServices.get_current_active_user)],
+           #tutaj pytanie czy get czy post - bo tworze test w db, ale nic nie wkladam od klienta juz
+            #z drugiej strony - wywołanie z submit test wywoływalo sie z post i tu jakj bylo get to byl blad wiec do przemysdalenia
+            session : Annotated[AsyncSession, Depends(get_session) ]):
+            print('end in')
+            ret =  await TestService.submit_test(user=current_user.nick, session=session)
+            print('ret')
+            return ret
+#
+# @app.post('/create_q', status_code=status.HTTP_201_CREATED)
+# def finish(session : Session = Depends(get_session)):
+#     session.add(Question)
+#     return {"message": "test finished"}
