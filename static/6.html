@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Question</title>
+</head>
+<body>
+    <div id="quiz-container">
+        <h2 id="question-text">Loading question...</h2>
+        <form id="quiz-form">
+            <!-- Ukryte pole na ID pytania z backendu -->
+            <input type="hidden" id="question-id" name="chosen_question_id" value="">
+            <!-- Kontener na odpowiedzi -->
+            <div id="answers-container"></div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        // Funkcja wyciągająca ID pytania z URL (?id=43)
+        const getIdFromSearchParams = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const idStr = urlParams.get('id'); // Pobiera wartość `id` z "?id=43"
+            console.log(`Extracted Question ID from URL: ${idStr}`);
+            return parseInt(idStr, 10); // Parsuje do liczby całkowitej
+        };
+
+        // Funkcja ładująca pytanie z backendu na podstawie ID
+        const loadQuestion = async (id) => {
+            try {
+                console.log(`Fetching data from /question/${id}`);
+                const response = await fetch(`/question/${id}`); // Wysyłanie żądania GET do backendu
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const questionData = await response.json();
+                console.log("Fetched question data:", questionData);
+
+                // Wyświetl tekst pytania w interfejsie użytkownika
+                document.getElementById("question-text").textContent = questionData.question;
+
+                // Ustaw ID pytania jako ukryte pole
+                document.getElementById("question-id").value = questionData.id;
+
+                // Wyświetl opcje odpowiedzi
+                const answersContainer = document.getElementById("answers-container");
+                answersContainer.innerHTML = ''; // Czyści poprzednie odpowiedzi
+                questionData.response.forEach(answer => {
+                    const answerDiv = document.createElement('div');
+                    answerDiv.innerHTML = `
+                        <input type="radio" id="answer-${answer.id}" name="chosen_answer_id" value="${answer.id}">
+                        <label for="answer-${answer.id}">${answer.answer}</label>
+                    `;
+                    answersContainer.appendChild(answerDiv);
+                });
+            } catch (error) {
+                console.error("Failed to load question:", error);
+                document.getElementById("question-text").textContent = "Failed to load question.";
+            }
+        };
+
+        // Obsługa formularza przy kliknięciu "Submit"
+        const handleSubmit = async (event) => {
+            event.preventDefault(); // Zapobiega domyślnemu przesłaniu formularza
+
+            const backendQuestionId = document.getElementById('question-id').value; // ID pytania z backendu
+            const answerId = document.querySelector('input[name="chosen_answer_id"]:checked')?.value; // ID wybranej odpowiedzi
+
+            if (!answerId) {
+                alert("Please select an answer.");
+                return;
+            }
+
+            // Dane do wysłania na backend
+            const payload = {
+                chosen_question_id: parseInt(backendQuestionId, 10), // Parsuje wartości do liczby całkowitej
+                chosen_answer_id: parseInt(answerId, 10)
+            };
+
+            console.log("Sending payload:", payload);
+
+            try {
+                const response = await fetch(`/question/${backendQuestionId}`, { // Wysyłanie żądania POST
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload) // Konwersja danych na JSON
+                });
+
+                if (response.redirected) {
+                    // Jeśli backend zwraca przekierowanie
+                    console.log(`Redirecting to: ${response.url}`);
+                    window.location.href = response.url; // Podążaj za przekierowaniem z backendu
+                } else if (response.ok) {
+                    console.log("Error: Backend returned valid response but no redirection.");
+                    alert("Unexpected situation occurred.");
+                } else {
+                    console.error("Error submitting answer:", response.status);
+                    alert("Failed to submit answer.");
+                }
+            } catch (error) {
+                console.error("Error during request:", error);
+                alert("Failed to submit answer due to an error.");
+            }
+        };
+
+        // Funkcja przeładowująca pytanie na podstawie nowego URL
+        const reloadQuestionOnNewURL = () => {
+            const newQuestionId = getIdFromSearchParams(); // Pobiera ID pytania z URL
+            if (!isNaN(newQuestionId)) {
+                console.log(`Detected URL change, reloading question ID: ${newQuestionId}`);
+                loadQuestion(newQuestionId); // Załaduj nowe pytanie
+            } else {
+                console.error("Invalid question ID detected in URL.");
+                document.getElementById("question-text").textContent = "Invalid question ID!";
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', reloadQuestionOnNewURL); // Obsługa pierwszego załadowania strony
+        window.addEventListener('popstate', reloadQuestionOnNewURL); // Obsługa przycisków "Wstecz" i "Dalej" w przeglądarce
+
+        const form = document.getElementById('quiz-form');
+        form.addEventListener('submit', handleSubmit); // Obsługa kliknięcia w przycisk "Submit"
+    </script>
+</body>
+</html>

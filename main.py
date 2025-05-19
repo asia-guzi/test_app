@@ -108,6 +108,11 @@ async def create_db():
 app = FastAPI(on_startup=[create_db]) 
 """
 app = FastAPI()
+from fastapi.staticfiles import StaticFiles
+# Mount folder "static" jako miejsce, z którego serwowana będzie zawartość frontendu
+
+app.mount("/static", StaticFiles(directory="static"), name="question")
+
 app.include_router(quiz_router)
 
 #to tylko w jednym miejscu i zosytawiam w config

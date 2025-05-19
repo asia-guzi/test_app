@@ -1,5 +1,5 @@
 from quiz.models import Question, Answer
-from quiz.schemas import AnsweredQuestion, UserResponse, DbAnswer, DbQuestion
+from quiz.schemas import AnsweredQuestion, UserResponse, DbAnswer, DbQuestion, GetQuestion, BaseAnswer, BaseQuestion, IdentifiedAnswer
 from .config import TEST_SIZE
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
@@ -79,6 +79,7 @@ class TestService:
         cls.current_tests[user] = test
           # test.questions = await get_questions(test.size)
           #
+        print(test.questions, '\n TESTS')
         return test
 
 
@@ -87,6 +88,7 @@ class TestService:
     async def get_question(cls, user : str, id: int):
 
         test = cls.current_tests[user]
+        print(F'USER OF TEST {user} \n QUESTION ID {id}, \n QUESTION {test.questions[test.state -1]}')
 
         #change it to separate verify_test_state(self)
         if id != test.state:
@@ -95,9 +97,17 @@ class TestService:
             return RedirectResponse(url=f"/question/{test.state}?error={error_message}")
 
 
-
         if id <= test.size:  # id not out of range
-            return test.questions[test.size -1]
+            test_question = test.questions[test.state -1]
+            return    GetQuestion(
+                #question=BaseQuestion.model_validate((test_question.question).question),
+                id=test_question.question.id,
+                question=test_question.question.question,
+                response=[IdentifiedAnswer.model_validate(answer) for answer in test_question.answers]
+                #które by było lepsze, bo zakomwentowae na pewno jest jsonowe bardziej
+                #response=[answer.answer for answer in test_question.answers]
+            )
+
         else:
             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -145,17 +155,24 @@ class TestService:
             error_message = "An attempt to skip or go back to question is not allowed"
             return RedirectResponse(url=f"/question/{test.state}?error={error_message}")
         print(f'bf: id {id}, state {test.state }')
+
+
         #test.validate_answer(question)
+
+
         test.state += 1
 
         print(f'af: id {id}, state {test.state }')
         if id < test.size: #not lastr question
             print('ok')
-            return RedirectResponse(f'/question/{id + 1}')
+            #return RedirectResponse(f'/question/{id + 1}')
+            return RedirectResponse(f'/frontend/question/{id + 1}',
+                                    status_code=303  # Wymusza metodę GET podczas przekierowania
+                                    )
         elif id == test.size: #last question
             print('end')
             print(test)
-            return RedirectResponse('/end_test')
+            return RedirectResponse('/end_test',  status_code=303) # GET#, status_code=307)  # Zachowuje metodę POST)
         else: # out of range
             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     # return test

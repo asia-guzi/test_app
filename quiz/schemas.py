@@ -18,44 +18,97 @@ class BaseQuestion(BaseModel):
     pozwala, aby Pydantic  model   mógł   być   używany   bezpośrednio   z   obiektami   ORM(np.SQLAlchemy).Oznacza
     to, że   możesz   tworzyć   instancje   modelu   Pydantic   na   podstawie   obiektów   ORM
     w   taki   sposób, jakby    pracowały   z   regularnymi   słownikami(dictionaries).   """
-
-
-class DbQuestion(BaseQuestion):
+class IdOfQuestion(BaseModel):
+    id: int #= Field(..., alias="id_q")  # "id" to alias
+    """
+    class IdOfQuestion(BaseModel):
     id: int
+    
+    
+    
+    class IdOfAnswer(BaseModel):
+        id: int
+    
+    
+    
+    class UserResponse(IdOfQuestion, IdOfAnswer):
+        pass
+    
+    ale grupuje mi id w jedno pole, a chcialam oba, a srednio moge smienic nazwe bo te pla maja sie mapowac do modeli orm z sql alchemy, no a najwyrazniej fastapi moze misc tylko jedno pole o takiej samej nazwie. co robvic?
+    
+    
+    
+    
+    Masz rację, FastAPI i Pydantic (na którym bazuje) wymagają, aby pola w klasie Pydantic miały unikalne nazwy. Jeśli dziedziczysz po dwóch klasach (IdOfQuestion i IdOfAnswer), oba mają pole o nazwie id. W tym przypadku występuje konflikt nazw, ponieważ Pydantic nie wie, jak rozróżnić te pola.
+    
+    Rozwiązania:
+    
+    1. Zmienienie nazw pól w klasach podstawowych
+    Jeśli masz kontrolę nad modelami ORM i możesz zaktualizować ich pola (zdejmując ten wymóg nazwiska id), przykładowo możesz dostosować nazwy pól bazowych, aby uniknąć konfliktu w dziedziczeniu:
+    
+    python
+    
+    
+    class IdOfQuestion(BaseModel):
+        question_id: int  # Zmieniona nazwa pola
+    
+    class IdOfAnswer(BaseModel):
+        answer_id: int  # Zmieniona nazwa pola
+    
+    class UserResponse(IdOfQuestion, IdOfAnswer):
+    pass
+    
+    ik tak zmiany aliasow nie pomogly, wiec ostatecznie reczie pola zdefiniowalam zeby sie nadpisalu
+    """
+
+
+class DbQuestion(BaseQuestion, IdOfQuestion):
     class Config:
         from_attributes = True
 
 class BaseAnswer (BaseModel):
     answer: str
 
-class ValidatedAnswer(BaseAnswer):
-    ans_validation: bool
 
-class DbAnswer(ValidatedAnswer):
-    id: int
+
+class IdOfAnswer(BaseModel):
+    id: int #= Field(..., alias="id_a")  # "id" to alias
+
+
+# class ValidatedAnswer(BaseAnswer):
+#
+
+
+
+class IdentifiedAnswer(BaseAnswer,IdOfAnswer):
+    pass
+
+class DbAnswer(IdentifiedAnswer):
+
     question_id: int
+    ans_validation: bool
 
     class Config:
         from_attributes = True  # Pozwala mapować odpowiedzi i pytania z ORM
 
 
-class GetQuestion(BaseQuestion):
-    response: list[BaseAnswer]
-
-    class Config:
-        from_attributes = True
+class GetQuestion(DbQuestion):
+    response: list[IdentifiedAnswer] #list[str]
 
 
-class UserResponse(BaseQuestion, BaseAnswer):
-    pass
+
+
+class UserResponse(BaseModel):
+    chosen_question_id: int
+    chosen_answer_id: int
 
 
 class AnsweredQuestion(BaseModel):
     question: DbQuestion
     answers: List[DbAnswer]
 
-    # class Config:
-    #     from_attributes = True  # Pozwala mapować odpowiedzi i pytania z ORM
+    class Config:
+        from_attributes = True  # Pozwala mapować odpowiedzi i pytania z ORM
 
 
 

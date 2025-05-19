@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Question</title>
+</head>
+<body>
+    <div id="quiz-container">
+        <h2 id="question-text">Loading question...</h2>
+        <form id="quiz-form" method="POST">
+            <input type="hidden" id="question-id" name="question_id" value=""> <!-- ID pytania -->
+
+            <!-- Kontener na odpowiedzi -->
+            <div id="answers-container"></div>
+
+            <button type="submit">Submit</button> <!-- Przycisk Submit -->
+        </form>
+    </div>
+
+    <script>
+        // Wyciąganie ID z URL
+        const getIdFromSearchParams = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const idStr = urlParams.get('id'); // Wyciąga `id` z "?id=1"
+            console.log(`Extracted Question ID: ${idStr}`);
+            return parseInt(idStr, 10);
+        };
+
+        const questionId = getIdFromSearchParams();
+
+        // Funkcja do dynamicznego ustawiania URL w formularzu `action`
+        const setFormAction = (id) => {
+            const form = document.getElementById("quiz-form");
+            form.action = `/question/${id}`; // Ustaw dynamiczny URL akcji
+            console.log(`Form action updated to: ${form.action}`);
+        };
+
+        // Pobierz dane pytania z backendu
+        const loadQuestion = async (id) => {
+            try {
+                console.log(`Fetching data from /question/${id}`);
+                const response = await fetch(`/question/${id}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const questionData = await response.json();
+                console.log("Fetched question data:", questionData);
+
+                // Ustaw pytanie w UI
+                document.getElementById("question-text").textContent = questionData.question;
+                document.getElementById("question-id").value = questionData.id;
+
+                const answersContainer = document.getElementById("answers-container");
+                answersContainer.innerHTML = '';
+                questionData.response.forEach(answer => {
+                    const answerDiv = document.createElement('div');
+                    answerDiv.innerHTML = `
+                        <input type="radio" id="answer-${answer.id}" name="answer_id" value="${answer.id}">
+                        <label for="answer-${answer.id}">${answer.answer}</label>
+                    `;
+                    answersContainer.appendChild(answerDiv);
+                });
+
+                // Ustaw dynamiczny URL w formularzu po wczytaniu pytania
+                setFormAction(questionData.id);
+            } catch (error) {
+                console.error("Failed to load question:", error);
+                document.getElementById("question-text").textContent = "Failed to load question.";
+            }
+        };
+
+        // Jeśli ID pytania jest poprawne, załaduj dane
+        if (!isNaN(questionId)) {
+            loadQuestion(questionId);
+        } else {
+            console.error("Invalid question ID in URL.");
+            document.getElementById("question-text").textContent = "Invalid question ID!";
+        }
+    </script>
+</body>
+</html>

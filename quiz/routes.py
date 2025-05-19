@@ -45,7 +45,8 @@ async def start_tests( session : Annotated[AsyncSession, Depends(get_session) ]
         # return {'detail':'Test not avaiable'}
         # #nie trzeba zwracac response czy cos, starczy ze ustawie jej parametry ale mozna skrcic poprzez exception
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Test not avaiable")
-    return RedirectResponse('/question/1')
+    #return RedirectResponse('/question/1')
+    return RedirectResponse(f'/frontend/question/{1}')
 
 
 
@@ -62,17 +63,29 @@ async def start_tests( session : Annotated[AsyncSession, Depends(get_session) ]
 
 
 
+
+@quiz_router.get("/frontend/question/{id}", tags=["quiz"])
+async def serve_static_question(id: int):
+    """
+    Przekierowuje użytkownika do dynamicznie zmodyfikowanej strony statycznej
+    z przekazaniem parametru `id` w URL.
+    """
+    url_with_id = f"/static/question.html?id={id}"
+    return RedirectResponse(url_with_id)
+
 # would it be better to distinguish on @app.get('/question/{id}') and @app.post('/question/{id}') -decided to distinguish
-@quiz_router.get('/question/{id}')#, response_model=GetQuestion, tags=['quiz']) #, methods=['GET', 'POST'])
+@quiz_router.get('/question/{id}', response_model=GetQuestion, tags=['quiz']) #, methods=['GET', 'POST'])
 async def get_questions(id: int
                  # , current_user: Annotated[str, Depends(AccessServices.get_current_active_user)]
                   # , request: Request
                   # , question : TestQuestion = None
                   # , response: Annotated[UserResponse, Form()] = None
                         ):
-
+    print('odpalone')
     # if request.method == "GET":
-    return await TestService.get_question(user=current_user.nick, id=id)
+    response = await TestService.get_question(user=current_user.nick, id=id)
+    print('response : ', response)
+    return response
 
 @quiz_router.post('/question/{id}', tags=['quiz']) #, methods=['GET', 'POST'])
 #async
@@ -114,14 +127,14 @@ def pass_answers(id: int
 #             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@quiz_router.post('/end_test', tags=['quiz'])
+@quiz_router.get('/end_test', tags=['quiz']) #is it ok to be get, when i create test outcome in backend|?
 async def finish( #current_user: Annotated[str, Depends(AccessServices.get_current_active_user)],
            #tutaj pytanie czy get czy post - bo tworze test w db, ale nic nie wkladam od klienta juz
             #z drugiej strony - wywołanie z submit test wywoływalo sie z post i tu jakj bylo get to byl blad wiec do przemysdalenia
             session : Annotated[AsyncSession, Depends(get_session) ]):
             print('end in')
             ret =  await TestService.submit_test(user=current_user.nick, session=session)
-            print('ret')
+            print('ret', ret)
             return ret
 #
 # @app.post('/create_q', status_code=status.HTTP_201_CREATED)
