@@ -1,1 +1,1 @@
-TEST_SIZE = 20
+TEST_SIZE = 3

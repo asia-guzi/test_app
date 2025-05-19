@@ -8,6 +8,7 @@ from sqlalchemy.orm import joinedload
 from fastapi.responses import RedirectResponse
 import re
 from datetime import datetime
+import random
 
 
 class TestService:
@@ -60,7 +61,13 @@ class TestService:
 
         questions = [ AnsweredQuestion(
             question=DbQuestion.model_validate(question),
-            answers=[DbAnswer.model_validate(answer) for answer in question.answers]
+            #answers=[DbAnswer.model_validate(answer) for answer in question.answers]
+            #in db 1. question is true - need to replace it at random. random sample to
+            #get a copy, and not to manipulate src data (like list.shuffle would)- 4 app logic to find true easier each time
+            answers=random.sample(
+                [DbAnswer.model_validate(answer) for answer in question.answers],
+                len(question.answers)  # Losowe przemieszanie odpowiedzi
+        )
         )
         for question in result]
 
@@ -111,36 +118,47 @@ class TestService:
         else:
             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    @staticmethod
-    def clean_text(text):
-        # Najpierw usuń białe znaki (spacje, tabulatory itp.)
-        text = text.strip()
-        # Konwersja na lowercase
-        text = text.lower()
-        # Usunięcie wszystkiego poza literami i cyframi
-        text = re.sub(r'[^\w]', '', text)
-        return text
+    # @staticmethod
+    # def clean_text(text):
+    #     # Najpierw usuń białe znaki (spacje, tabulatory itp.)
+    #     text = text.strip()
+    #     # Konwersja na lowercase
+    #     text = text.lower()
+    #     # Usunięcie wszystkiego poza literami i cyframi
+    #     text = re.sub(r'[^\w]', '', text)
+    #     return text
 
-    def get_true_ans(self):
+    def validate_answer(self, test_question: AnsweredQuestion, user_answer: UserResponse):
 
-        question = self.questions[self.state - 1]
+        #generator - zeby mi znalazł prawdziwą odp i przestał szukać
+        print('validate_answer')
+        true_id = next(answer.id for answer in test_question.answers if answer.ans_validation)
+        print('true_id', true_id)
+        print('true_ans' , user_answer.chosen_answer_id)
+        if true_id == user_answer.chosen_answer_id:
+            #raise outcome if true answer
+            self.true_ans += 1
+            print('true_ans in ', self.true_ans )
 
-        return [answer for answer in question.answers if answer.ans_validation]
-
-    def validate_answer(self,  question : UserResponse):
+    def validate_question(self,  question : UserResponse):
         """
         validation of user answer
         :param question:
         :return:
         """
+        print('validate_question')
         #
         # true_ans = question.answers.ans_validation
         # pass= self.clean_text()
+        test_question = self.questions[self.state - 1]
 
-        true_answers = self.get_true_ans()
+        if test_question.question.id != question.chosen_question_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
-        if self.clean_text(question.response) == self.clean_text(true_answers):
-            self.true_ans += 1 #if true add point to outcome
+        self.validate_answer(test_question, question)
+
+        # if self.clean_text(question.response) == self.clean_text(true_answers):
+        #     self.true_ans += 1 #if true add point to outcome
 
     @classmethod
     def submit_answer(cls, user: str, id: int, question : UserResponse):
@@ -157,8 +175,7 @@ class TestService:
         print(f'bf: id {id}, state {test.state }')
 
 
-        #test.validate_answer(question)
-
+        test.validate_question(question)
 
         test.state += 1
 
@@ -188,7 +205,7 @@ class TestService:
         print(cls.current_tests)
         test = cls.current_tests[user]
         print('bf outcome')
-        outcome = round(test.true_ans / test.size, 2)
+        outcome = round(test.true_ans / test.size * 100, 2)
         #pass the submision into db
 
         #
