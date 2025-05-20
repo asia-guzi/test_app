@@ -1,11 +1,11 @@
-from quiz.models import Question, Answer
-from quiz.schemas import AnsweredQuestion, UserResponse, DbAnswer, DbQuestion, GetQuestion, BaseAnswer, BaseQuestion, IdentifiedAnswer
+from quiz.models import Question, Answer, TestResult
+from quiz.schemas import AnsweredQuestion, UserResponse, DbAnswer, DbQuestion, GetQuestion, BaseAnswer, BaseQuestion, IdentifiedAnswer, TestOutcome
 from .config import TEST_SIZE
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 import re
 from datetime import datetime
 import random
@@ -16,12 +16,13 @@ class TestService:
     current_tests = {}
 
     def __init__(self,
-                 questions):
+                 questions): # user: User):
         self.questions = questions
         self.size = TEST_SIZE
         self.state = 1
         self.true_ans = 0
         self.start_time = datetime.now()
+        self.test_user = 1 # User
         #self.id = test_set.id  # indywidualne id zeby zidentyfikowac set uzytkownika
         #self.user_id = test_set.user_id - user as kwy in dict
 
@@ -30,6 +31,7 @@ class TestService:
     async def random_questions(cls
                             , session : AsyncSession
                             , test_size
+                               #, user: User
                             ) ->  'TestService':
         """
         I/O operation, async function to get questions from db
@@ -76,7 +78,7 @@ class TestService:
 
         #Validation of new test
         # set_for_one_test = TestSet(test_set=questions)  # Pobierz wyniki jako lista obiektów
-        return cls(questions=questions)
+        return cls(questions=questions) #, user
 
     @classmethod
     async def create_test(cls, user: str, session: AsyncSession):
@@ -151,7 +153,7 @@ class TestService:
         # true_ans = question.answers.ans_validation
         # pass= self.clean_text()
         test_question = self.questions[self.state - 1]
-
+        print(test_question.question.id , question.chosen_question_id)
         if test_question.question.id != question.chosen_question_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -182,14 +184,16 @@ class TestService:
         print(f'af: id {id}, state {test.state }')
         if id < test.size: #not lastr question
             print('ok')
-            #return RedirectResponse(f'/question/{id + 1}')
+            # return RedirectResponse(f'/question/{id + 1}')
             return RedirectResponse(f'/frontend/question/{id + 1}',
-                                    status_code=303  # Wymusza metodę GET podczas przekierowania
-                                    )
+                                    status_code=303)  # Wymusza metodę GET podczas przekierowania
+
         elif id == test.size: #last question
             print('end')
             print(test)
-            return RedirectResponse('/end_test',  status_code=303) # GET#, status_code=307)  # Zachowuje metodę POST)
+            return RedirectResponse(url='/end_test',  status_code=303) # GET#, status_code=307)  # Zachowuje metodę POST)
+            # return JSONResponse(content={"redirect_url": "/end_test"}, status_code=200)
+            #json response, bo jak bylo redirect, to z jakiegos powodu metoda wywoływała sie 2 razy i 2 razy zapisywała do db
         else: # out of range
             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     # return test
@@ -202,18 +206,27 @@ class TestService:
         """
 
         print ('bf test')
+
         print(cls.current_tests)
         test = cls.current_tests[user]
         print('bf outcome')
         outcome = round(test.true_ans / test.size * 100, 2)
         #pass the submision into db
 
-        #
-        # outcome =    Test_output()
-        #
-        # await  session.add(outcome)
-        # session.commit()
-        # await session.refresh(outcome)
+        test_result =    TestOutcome(   users_id = test.test_user #.id
+                                        , end_time = datetime.now()
+                                    , start_time = test.start_time
+                                    ,outcome = outcome)
+        to_db = TestResult(
+                users_id = test_result.users_id
+                ,end_time = test_result.end_time
+                ,start_time = test_result.start_time
+                ,outcome = test_result.outcome)
+
+
+        session.add(to_db)
+        await session.commit()
+        await session.refresh(to_db)
 
         return {"message": f"test finished, your grade is {outcome} %"}
 

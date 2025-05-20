@@ -9,42 +9,31 @@
     <div id="quiz-container">
         <h2 id="question-text">Loading question...</h2>
         <form id="quiz-form" action="#" method="POST">
-            <!-- Ukryte pole na ID pytania z backendu -->
             <input type="hidden" id="question-id" name="chosen_question_id" value="">
-            <!-- Kontener na odpowiedzi -->
             <div id="answers-container"></div>
             <button type="submit">Submit</button>
         </form>
     </div>
 
     <script>
-        // Wyciąganie ID z URL (?id=43)
-        const getIdFromSearchParams = () => {
+        let test_state = null;
+
+        const getTestStateFromSearchParams = () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const idStr = urlParams.get('id'); // Pobiera wartość `id` z "?id=43"
-            console.log(`Extracted Question ID from URL: ${idStr}`);
-            return parseInt(idStr, 10); // Parsuje do liczby całkowitej
+            return parseInt(urlParams.get('id'), 10) || null; // Pobiera "id" z URL
         };
 
-        // Ładowanie pytania z backendu na podstawie ID
-        const loadQuestion = async (id) => {
+        const loadQuestion = async (test_state) => {
             try {
-                console.log(`Attempting to fetch question data for ID: ${id}`);
-                const response = await fetch(`/question/${id}`); // Żądanie GET do backendu
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const response = await fetch(`/question/${test_state}`);
+                if (!response.ok) throw new Error("Failed to load the question.");
 
                 const questionData = await response.json();
-                console.log("Fetched question data:", questionData);
-
-                // Wyświetlanie tekstu pytania w UI
                 document.getElementById("question-text").textContent = questionData.question;
-
-                // Ustawia ID pytania w ukrytym polu formularza
                 document.getElementById("question-id").value = questionData.id;
 
-                // Wyświetla opcje odpowiedzi w UI
                 const answersContainer = document.getElementById("answers-container");
-                answersContainer.innerHTML = ''; // Czyści poprzednie odpowiedzi
+                answersContainer.innerHTML = '';
                 questionData.response.forEach(answer => {
                     const answerDiv = document.createElement('div');
                     answerDiv.innerHTML = `
@@ -53,75 +42,46 @@
                     `;
                     answersContainer.appendChild(answerDiv);
                 });
-            } catch (error) {
-                console.error("Error while loading question:", error);
-                document.getElementById("question-text").textContent = "Failed to load question.";
+            } catch {
+                document.getElementById("question-text").textContent = "Error loading the question.";
             }
         };
 
-        // Obsługa formularza przy kliknięciu "Submit"
         const handleSubmit = async (event) => {
-            event.preventDefault(); // Zapobiega domyślnemu przesłaniu formularza
-            console.log("Handling form submission.");
+            event.preventDefault();
 
-            const backendQuestionId = document.getElementById("question-id").value; // Pobiera ID z ukrytego pola
-            const answerId = document.querySelector('input[name="chosen_answer_id"]:checked')?.value; // Pobiera ID wybranej odpowiedzi
+            const backendQuestionId = document.getElementById("question-id").value;
+            const answerId = document.querySelector('input[name="chosen_answer_id"]:checked')?.value;
 
-            if (!answerId) {
-                alert("Please select an answer before submitting.");
-                return;
-            }
+            if (!answerId) return;
 
             const payload = {
                 chosen_question_id: parseInt(backendQuestionId, 10),
                 chosen_answer_id: parseInt(answerId, 10)
             };
 
-            console.log("Payload being sent to backend:", payload);
-
             try {
-                const response = await fetch(`/question/${backendQuestionId}`, {
+                const response = await fetch(`/question/${test_state}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload) // Wysyła dane jako JSON
+                    body: JSON.stringify(payload)
                 });
 
                 if (response.redirected) {
-                    // Jeśli backend zwraca przekierowanie
-                    console.log(`Redirecting to: ${response.url}`);
-                    window.location.href = response.url; // Podążaj za przekierowaniem
-                } else if (response.ok) {
-                    console.log("Unexpected valid response without redirect.");
-                } else {
-                    throw new Error(`Submission failed with status: ${response.status}`);
+                    window.location.href = response.url; // Automatyczne przekierowanie
                 }
-            } catch (error) {
-                console.error("Error during submitting answer:", error);
-                alert("Failed to submit due to an error.");
+            } catch {
+                // Nic nie wyświetlamy na stronę — minimalizm
             }
         };
 
-        // Funkcja przeładowująca pytanie na podstawie nowego URL
         const reloadQuestionOnNewURL = () => {
-            const newQuestionId = getIdFromSearchParams(); // Pobiera ID pytania z URL
-            if (!isNaN(newQuestionId)) {
-                console.log(`Reloading question for ID: ${newQuestionId}`);
-                loadQuestion(newQuestionId); // Wywołuje funkcję ładowania pytania
-            } else {
-                console.error("Invalid question ID detected in URL.");
-                document.getElementById("question-text").textContent = "Invalid question ID!";
-            }
+            test_state = getTestStateFromSearchParams();
+            if (test_state !== null) loadQuestion(test_state);
         };
 
-        // Obsługa pierwszego załadowania strony
         window.addEventListener('DOMContentLoaded', reloadQuestionOnNewURL);
-
-        // Obsługa zmiany URL (np. przycisk "Wstecz")
-        window.addEventListener('popstate', reloadQuestionOnNewURL);
-
-        // Obsługa kliknięcia w formularz
-        const form = document.getElementById('quiz-form');
-        form.addEventListener('submit', handleSubmit); // Obsługa przycisku "Submit"
+        document.getElementById('quiz-form').addEventListener('submit', handleSubmit);
     </script>
 </body>
 </html>

@@ -26,5 +26,5 @@ jupyter notebook start_project\initiate_project.ipynb
 
 :: Uruchamianie serwera FastAPI
 echo Uruchamianie serwera FastAPI...
-python -m uvicorn app:app --host 127.0.0.1 --port 8000 --reload
+python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 pause

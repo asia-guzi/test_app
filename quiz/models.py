@@ -1,9 +1,11 @@
 # users/users.py
+from pymysql.times import TimeDelta
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Float, Integer, String, ForeignKey, Boolean, Time, PrimaryKeyConstraint
+from sqlalchemy import Column, Float, Integer, String, ForeignKey, Boolean, DateTime, Interval, PrimaryKeyConstraint
 from db.config import async_engine
 from db.config import Base
 from users.models import User
+from datetime  import datetime, timedelta
 
 
 
@@ -33,15 +35,16 @@ class Answer(Base):
     # technical requirements of the relationship checked by check_valid_answers trigger
 
 
-#
-# class Test_output(Base):
-#     __tablename__ = "test_outcomes"
-#
-#     id = Column(Integer, primary_key=True, autoincrement=True) #, index=True)
-#     users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-#     time_finish = Column(Time)
-#     outcome = Column(Float, nullable=False) #number of crrect answers / all questions
-#     user = relationship("User", back_populates="tests")
-#
-#
-#
+
+class TestResult(Base):
+    __tablename__ = "test_outcomes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True) #, index=True)
+    users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    end_time = Column(DateTime)
+    start_time = Column(DateTime)
+    outcome = Column(Float, nullable=False) #number of crrect answers / all questions
+    user = relationship("User", back_populates="tests")
+
+
+

@@ -25,7 +25,7 @@ class User(Base):
     email = Column(String(50))
     role = Column(Enum('student', 'teacher', name='role_enum')) # 2 possible values
     disabled = Column(Boolean, default=False)
-    #users = relationship("User", back_populates="tests")
+    tests = relationship("TestResult", back_populates="user")
 
 
     """

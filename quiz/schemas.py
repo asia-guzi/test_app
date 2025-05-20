@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from pydantic import BaseModel
 from typing import List
 
@@ -7,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.sql.annotation import Annotated
 
 from quiz.models import Question, Answer
-from time import time
+from datetime import datetime
 from .config import TEST_SIZE
 
 
@@ -124,14 +126,13 @@ class AnsweredQuestion(BaseModel):
 #     user_id : str
 #
 
-#
-# class TestOutcome():
-#
-#
-#     users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-#     time_finish = Column(Time)
-#     outcome =
-#     user = relationship("User", back_populates="tests")
+
+class TestOutcome(BaseModel):
+
+    users_id :int
+    end_time : datetime
+    start_time : datetime
+    outcome : float
 
 # class Test_output(Base):
 #     __tablename__ = "test_outcomes"

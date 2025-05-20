@@ -45,7 +45,7 @@ async def start_tests( session : Annotated[AsyncSession, Depends(get_session) ]
         # return {'detail':'Test not avaiable'}
         # #nie trzeba zwracac response czy cos, starczy ze ustawie jej parametry ale mozna skrcic poprzez exception
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Test not avaiable")
-    #return RedirectResponse('/question/1')
+    # return RedirectResponse('/question/1')
     return RedirectResponse(f'/frontend/question/{1}')
 
 
