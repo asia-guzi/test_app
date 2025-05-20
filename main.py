@@ -2,19 +2,20 @@
 
 from fastapi import FastAPI, Request, status, HTTPException, Form, Depends
 from fastapi.responses import RedirectResponse, Response
-from fastapi.security import OAuth2PasswordBearer
+# from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from db.dependencies import get_session
 
 # from sqlalchemy.sql.annotation import Annotated,
 from typing import Annotated
-from fastapi.security import OAuth2PasswordBearer
+# from fastapi.security import OAuth2PasswordBearer
 
 # from sqlalchemy import func
 # from sqlalchemy.orm import joinedload, Session
 # from users.users import Question, Answer
 # from db.dependencies import get_session
 from quiz.routes import quiz_router
+from users.routes import user_router
 
 
 
@@ -114,6 +115,7 @@ from fastapi.staticfiles import StaticFiles
 app.mount("/static", StaticFiles(directory="static"), name="question")
 
 app.include_router(quiz_router)
+app.include_router(user_router)
 
 #to tylko w jednym miejscu i zosytawiam w config
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -124,7 +126,9 @@ def index():
     #insert click to route @app.get('/start')
     return {'message' : 'Welcome to a test , after you log in there is 30 min to fulfill the test '}
 #(30 min topken)
-
+# # Uruchom serwer
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="127.0.0.1", port=8000)
 
 
 

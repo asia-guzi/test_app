@@ -25,13 +25,15 @@ tags=['quiz'] #nie trzeba w kazdym z osobna, tylko mozna w routerze ustawic tags
 )
 current_user = User(nick='nick',save_password='pass')
 @quiz_router.get('/start') #, tags=['quiz'])
-async def start_tests( session : Annotated[AsyncSession, Depends(get_session) ]
+async def start_tests(
+        current_user: Annotated[str, Depends(AccessServices.get_current_active_user)]
+        ,session : Annotated[AsyncSession, Depends(get_session) ]
                       ):
     # return {"token": token}
-    # """     #current_user: Annotated[str, Depends(AccessServices.get_current_active_user)]
-    #    session : Annotated[AsyncSession, Depends(get_session) ]
-    #    #, response: Response
-    #    #,token: Annotated[str, Depends(oauth2_scheme)]"""
+    """     #current_user: Annotated[str, Depends(AccessServices.get_current_active_user)]
+       session : Annotated[AsyncSession, Depends(get_session) ]
+       #, response: Response
+       #,token: Annotated[str, Depends(oauth2_scheme)]"""
     #jesli jeszcze nie ma w sloniku - nie mozesz drugiego testu
        # return current test
     print('bt')
