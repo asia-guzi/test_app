@@ -5,3 +5,11 @@
 .venv/
 venv/
 start_project/
+
+# IDE
+.idea/
+.vscode/
+
+#system
+.DS_Store
+Thumbs.db
