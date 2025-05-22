@@ -1,9 +1,9 @@
 from __future__ import annotations
 #sluzy do tego zeby rozpoznac klasę, gdy chce sie do niej odwołać w jednej z jej metod, bo to oznacz\a ze ta klasa nie jest do konca zdefiniowana i inaczej python doda blad
 from .models import User
-from .schemas import GetUser, DbUser, TokenData
+from .schemas import DbUser
 from .config import pwd_context, SECRET_KEY, ALGORITHM #, oauth2_scheme
-from db.dependencies import get_session
+from app.db.dependencies import get_session
 # from sqlalchemy.orm import Session
 from sqlalchemy.future import select  # Wymaga SQLAlchemy 1.4+
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,9 +19,7 @@ from typing import Annotated
 
 
 import jwt
-from fastapi import Depends, HTTPException, status
-
-from jwt.exceptions import InvalidTokenError
+from fastapi import Depends, HTTPException
 
 
 #

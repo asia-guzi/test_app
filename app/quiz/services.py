@@ -1,12 +1,11 @@
-from quiz.models import Question, Answer, TestResult
-from quiz.schemas import AnsweredQuestion, UserResponse, DbAnswer, DbQuestion, GetQuestion, BaseAnswer, BaseQuestion, IdentifiedAnswer, TestOutcome
+from app.quiz.models import Question, TestResult
+from app.quiz.schemas import AnsweredQuestion, UserResponse, DbAnswer, DbQuestion, GetQuestion, IdentifiedAnswer, TestOutcome
 from .config import TEST_SIZE
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
-from fastapi.responses import RedirectResponse, JSONResponse
-import re
+from fastapi.responses import RedirectResponse
 from datetime import datetime
 import random
 

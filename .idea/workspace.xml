@@ -59,11 +59,11 @@
       <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\tests" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app" />
+      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\app" />
       <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\start_project\.ipynb_checkpoints" />
       <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\tests" />
       <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\users" />
-      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app" />
-      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\quiz" />
     </key>
   </component>
   <component name="SharedIndexes">
@@ -93,7 +93,7 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/quiz/services.py</url>
+          <url>file://$PROJECT_DIR$/app/quiz/services.py</url>
           <line>234</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>

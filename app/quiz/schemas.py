@@ -1,16 +1,9 @@
-from datetime import timedelta
-
-from pydantic import BaseModel
 from typing import List
 
 # from python_multipart.multipart import Field
-from uuid import uuid4
-from pydantic import BaseModel, Field
-from sqlalchemy.sql.annotation import Annotated
+from pydantic import BaseModel
 
-from quiz.models import Question, Answer
 from datetime import datetime
-from .config import TEST_SIZE
 
 
 class BaseQuestion(BaseModel):

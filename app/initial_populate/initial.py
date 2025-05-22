@@ -4,11 +4,11 @@ import os
 # Dodanie folderu nadrzędnego (`../`) do sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from db.config import async_engine, async_session, Base
-from quiz.models import Question, Answer
-from users.models import User
+from app.db.config import async_engine, async_session, Base
+from app.quiz.models import Question, Answer
+from app.users.models import User
 # from db.triggers import upgrade
-from users.services import AccessServices
+from app.users.services import AccessServices
 from sqlalchemy.future import select
 import asyncio
 from .models import DbCreated
