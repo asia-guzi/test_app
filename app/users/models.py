@@ -1,15 +1,9 @@
 
-from sqlalchemy import Column, String, Integer, CheckConstraint, Enum
+from sqlalchemy import String, Enum
 from sqlalchemy.orm import relationship
-from db.config import Base
-from passlib.context import CryptContext
-from pydantic import BaseModel, EmailStr
 
-
-
-
-from sqlalchemy import Column, Integer, ForeignKey, Boolean, PrimaryKeyConstraint
-from db.config import Base #, async_engine
+from sqlalchemy import Column, Integer, Boolean
+from app.db.config import Base #, async_engine
 
 
 

@@ -1,17 +1,16 @@
 
 #test is avaialble only gor lohed in users, tgherefore the dependency get_current_active_user
 from typing import Annotated
-from fastapi import APIRouter, Depends, Response, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from users.services import AccessServices
 #from users.config import  oauth2_scheme
 from .services import TestService
 from .schemas import GetQuestion, UserResponse
-from db.dependencies import get_session
+from app.db.dependencies import get_session
 from .config import TEST_SIZE
-from users.models import User
+from app.users.models import User
 
 
 

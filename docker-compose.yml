@@ -13,6 +13,8 @@ services:
       - db
     environment:
       DATABASE_URL: ${DATABASE_URL}
+    command: >
+      bash -c "python3 /app/initial_populate/initial.py && uvicorn app.users.main:app --host 0.0.0.0 --port 8000"
 
   db:
     image: mysql:8.0
@@ -33,20 +35,20 @@ services:
   #volumes:
   #  mysql_data:
   #    driver: local
-
-  initial_populate:
-    build:
-      context: .
-    depends_on:
-      - db
-    environment:
-      DATABASE_HOST: db
-      DATABASE_PORT: 3306
-      DATABASE_USER:  ${MYSQL_USER}
-      DATABASE_PASSWORD: ${MYSQL_PASSWORD}
-      DATABASE_NAME: ${MYSQL_DATABASE}
-    command: >
-      python3 /initial_populate/initial.py
+#
+#  initial_populate:
+#    build:
+#      context: .
+#    depends_on:
+#      - db
+#    environment:
+#      DATABASE_HOST: db
+#      DATABASE_PORT: 3306
+#      DATABASE_USER:  ${MYSQL_USER}
+#      DATABASE_PASSWORD: ${MYSQL_PASSWORD}
+#      DATABASE_NAME: ${MYSQL_DATABASE}
+#    command: >
+#      python3 /initial_populate/initial.py
 
 
 

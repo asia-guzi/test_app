@@ -1,13 +1,7 @@
 # users/users.py
-from pymysql.times import TimeDelta
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Float, Integer, String, ForeignKey, Boolean, DateTime, Interval, PrimaryKeyConstraint
-from db.config import async_engine
-from db.config import Base
-from users.models import User
-from datetime  import datetime, timedelta
-
-
+from sqlalchemy import Column, Float, Integer, String, ForeignKey, Boolean, DateTime
+from app.db.config import Base
 
 
 # Create Question model (~ row in db)

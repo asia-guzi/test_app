@@ -1,20 +1,14 @@
 
 
-from fastapi import FastAPI, Request, status, HTTPException, Form, Depends
-from fastapi.responses import RedirectResponse, Response
-from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
-from db.dependencies import get_session
+from fastapi import FastAPI
 
 # from sqlalchemy.sql.annotation import Annotated,
-from typing import Annotated
-from fastapi.security import OAuth2PasswordBearer
 
 # from sqlalchemy import func
 # from sqlalchemy.orm import joinedload, Session
 # from users.users import Question, Answer
 # from db.dependencies import get_session
-from quiz.routes import quiz_router
+from app.quiz.routes import quiz_router
 
 
 

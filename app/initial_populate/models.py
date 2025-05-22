@@ -1,7 +1,5 @@
-from pymysql.times import TimeDelta
-from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Boolean, DateTime
-from db.config import Base
+from app.db.config import Base
 
 
 class DbCreated(Base):
