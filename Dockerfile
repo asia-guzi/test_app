@@ -7,7 +7,9 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy in the source code
-COPY src ./src
+COPY ./ ./
+# COPY ../test_app ./src
+
 EXPOSE 8000
 
 # # Setup an app user so the container doesn't run as the root user
