@@ -1,4 +1,4 @@
-from quiz.models import Question, Answer, TestResult
+from quiz.models import Question, TestResult #Answer,
 from quiz.schemas import AnsweredQuestion, UserResponse, DbAnswer, DbQuestion, GetQuestion, BaseAnswer, BaseQuestion, IdentifiedAnswer, TestOutcome
 from .config import TEST_SIZE
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,20 +46,7 @@ class TestService:
 
         )
 
-        # result = result_dupl.unique() -> tyu zapytanie bylo nieprzetworzone wiec nie dzoialala konwersja typow
         result = result_dupl.scalars().unique().all()
-
-        # sync by byłp
-        #         (  # zamienic na execute query i doda
-        #             session.query(Question)
-        #             .options(joinedload(Question.answers))  # need a complet of Q + A
-        #             .order_by(func.random())  # select questions from base at random
-        #             .limit(test_size)
-        #             .all())
-
-        # Bezpośrednia konwersja ORM -> Pydantic przy pomocy from_orm() - mozliwa dzieki  class Config:
-        #         orm_mode = True  # Pozwala mapować odpowiedzi i pytania z ORM
-        # questions = [AnsweredQuestion.model_validate(q) for q in result.scalars().all()]
 
         questions = [ AnsweredQuestion(
             question=DbQuestion.model_validate(question),
@@ -73,10 +60,7 @@ class TestService:
         )
         for question in result]
 
-        # questions = [AnsweredQuestion.model_validate(q).model_dump() for q in result.scalars().all()]
-
-
-        #Validation of new test
+        #Validation of new test -_ maybe to add
         # set_for_one_test = TestSet(test_set=questions)  # Pobierz wyniki jako lista obiektów
         return cls(questions=questions) #, user
 
@@ -86,8 +70,7 @@ class TestService:
         test = await cls.random_questions(session=session,
                                        test_size=TEST_SIZE)
         cls.current_tests[user] = test
-          # test.questions = await get_questions(test.size)
-          #
+
         print(test.questions, '\n TESTS')
         return test
 
@@ -167,15 +150,12 @@ class TestService:
 
         test = cls.current_tests[user]
 
-
-
         # change it to separate verify_test_state(self)
         if id != test.state:
             # if user tries to skip / go back to questoion
             error_message = "An attempt to skip or go back to question is not allowed"
             return RedirectResponse(url=f"/question/{test.state}?error={error_message}")
         print(f'bf: id {id}, state {test.state }')
-
 
         test.validate_question(question)
 
@@ -230,49 +210,17 @@ class TestService:
 
         return {"message": f"test finished, your grade is {outcome} %"}
 
-# class QuestionService():
-    # Code above omitted 👆
-    #
-    # @
-    # async def create_hero(hero: Hero, session: SessionDep) -> Hero:
-    #     """https://fastapi.tiangolo.com/tutorial/sql-databases/#create-a-hero
-    #
-    #     https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html
-    #     async_scoped_session includes proxy behavior similar to that of scoped_session, which means it can be treated as a AsyncSession directly, keeping in mind that the usual await keywords are necessary, including for the async_scoped_session.remove() method:
-    #
-    #     async def some_function(some_async_session, some_object):
-    #     # use the AsyncSession directly
-    #     some_async_session.add(some_object)
-    #
-    #     # use the AsyncSession via the context-local proxy
-    #     await AsyncScopedSession.commit()
-    #
-    #     # "remove" the current proxied AsyncSession for the local context
-    #     await AsyncScopedSession.remove()
-    #     """
-    #     await  session.add(hero)
-    #     session.commit()
-    #     await session.refresh(hero)
-    #     return hero
-#
-#     # Code above omitted 👆
-#
-#     @app.get("/heroes/")
-#     def read_heroes(
-#             session: SessionDep,
-#             offset: int = 0,
-#             limit: Annotated[int, Query(le=100)] = 100,
-#     ) -> list[Hero]:
-#         heroes = session.exec(select(Hero).offset(offset).limit(limit)).all()
-#         return heroes
-#
-#     # Code above omitted 👆
-#
-#     @app.delete("/heroes/{hero_id}")
-#     def delete_hero(hero_id: int, session: SessionDep):
-#         hero = session.get(Hero, hero_id)
-#         if not hero:
-#             raise HTTPException(status_code=404, detail="Hero not found")
-#         session.delete(hero)
-#         session.commit()
-#         return {"ok": True}
+class QuestionService:
+
+    async def create_question(self):
+       pass
+        # await  session.add(hero)
+        # session.commit()
+        # await session.refresh(hero)
+        # return hero
+
+    async def update_question(self):
+       pass
+
+    async def delete_question(self):
+       pass
