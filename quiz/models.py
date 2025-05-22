@@ -1,7 +1,13 @@
 # users/users.py
+from pymysql.times import TimeDelta
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Float, Integer, String, ForeignKey, Boolean, DateTime
+from sqlalchemy import Column, Float, Integer, String, ForeignKey, Boolean, DateTime, Interval, PrimaryKeyConstraint
+from db.config import async_engine
 from db.config import Base
+from users.models import User
+from datetime  import datetime, timedelta
+
+
 
 
 # Create Question model (~ row in db)
@@ -12,6 +18,9 @@ class Question(Base):
     question = Column(String(500), nullable=False)
     answers = relationship("Answer", back_populates="questions")  # one -> many (a)
     #technical requirements of the relationship checked by check_valid_answers trigger
+
+
+
 
 
 # each answer is connected to particular question, has attribute indicating a correct answer
@@ -26,6 +35,7 @@ class Answer(Base):
     # technical requirements of the relationship checked by check_valid_answers trigger
 
 
+
 class TestResult(Base):
     __tablename__ = "test_outcomes"
 
@@ -35,3 +45,6 @@ class TestResult(Base):
     start_time = Column(DateTime)
     outcome = Column(Float, nullable=False) #number of crrect answers / all questions
     user = relationship("User", back_populates="tests")
+
+
+

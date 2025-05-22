@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Question</title>
+</head>
+<body>
+    <div id="quiz-container">
+        <h2 id="question-text">Loading question...</h2>
+        <form id="quiz-form" action="#" method="POST">
+            <!-- Ukryte pole na ID pytania z backendu -->
+            <input type="hidden" id="question-id" name="chosen_question_id" value="">
+            <!-- Kontener na odpowiedzi -->
+            <div id="answers-container"></div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        // Zdefiniowanie `test_state` jako zmiennej globalnej
+        let test_state = null;
+
+        /**
+         * Funkcja wyciągająca parametr `id` z URL
+         * i przypisująca go do zmiennej `test_state`.
+         */
+        const getTestStateFromSearchParams = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const idStr = urlParams.get('id');  // Odczytaj parametr `id`
+            console.log(`Extracted ID from URL: ${idStr}`);
+
+            // Walidacja i konwersja wartości na liczbowy typ
+            const parsedId = parseInt(idStr, 10);
+
+            // W przypadku błędnej wartości zwracamy `null`
+            if (isNaN(parsedId)) {
+                console.error("Failed to parse ID. Setting test_state to null.");
+                return null;
+            }
+
+            // Zapisujemy wartość w zmiennej globalnej `test_state`
+            test_state = parsedId;
+            console.log(`Renamed 'id' to test_state: ${test_state}`);
+            return test_state;
+        };
+
+        /**
+         * Funkcja ładowania pytania z backendu na podstawie `test_state`
+         */
+        const loadQuestion = async (test_state) => {
+            try {
+                console.log(`Attempting to fetch question data for test_state: ${test_state}`);
+                const response = await fetch(`/question/${test_state}`); // Żądanie GET do backendu
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error("Question not found. Please check the provided test_state.");
+                    } else {
+                        throw new Error(`HTTP Error! Status: ${response.status}`);
+                    }
+                }
+
+                const questionData = await response.json();
+                console.log("Fetched question data:", questionData);
+
+                // Wyświetlam pytanie w treści strony
+                document.getElementById("question-text").textContent = questionData.question;
+                document.getElementById("question-id").value = questionData.id; // Aktualizacja (nie musisz tego później używać)
+
+                // Wyświetlam odpowiedzi w formularzu
+                const answersContainer = document.getElementById("answers-container");
+                answersContainer.innerHTML = ''; // Czyść poprzednie odpowiedzi
+                questionData.response.forEach(answer => {
+                    const answerDiv = document.createElement('div');
+                    answerDiv.innerHTML = `
+                        <input type="radio" id="answer-${answer.id}" name="chosen_answer_id" value="${answer.id}">
+                        <label for="answer-${answer.id}">${answer.answer}</label>
+                    `;
+                    answersContainer.appendChild(answerDiv);
+                });
+            } catch (error) {
+                console.error("Error while loading question:", error);
+                document.getElementById("question-text").textContent =
+                    "Failed to load the question. Please try again later.";
+            }
+        };
+
+        /**
+         * Funkcja obsługująca wysyłanie odpowiedzi użytkownika na pytanie quizowe
+         */
+        const handleSubmit = async (event) => {
+            event.preventDefault(); // Zapobiega przesłaniu formularza domyślnie
+
+            // Wartość `test_state` dostępna globalnie
+            console.log(`Using test_state: ${test_state} to submit answer`);
+
+            const answerId = document.querySelector('input[name="chosen_answer_id"]:checked')?.value;
+
+            if (!answerId) {
+                alert("Please select an answer before submitting.");
+                return;
+            }
+
+            // Payload do wysłania na backend
+            const payload = {
+                chosen_question_id: parseInt(test_state, 10), // Bezpośrednie użycie globalnej zmiennej
+                chosen_answer_id: parseInt(answerId, 10)
+            };
+
+            console.log("Payload being sent to backend:", payload);
+
+            try {
+                // Wysłanie żądania POST z odpowiedzią na pytanie
+                const response = await fetch(`/question/${test_state}`, { // Użycie test_state na backend
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload) // Zmiana payload na JSON
+                });
+
+                if (response.redirected) {
+                    console.log(`Redirecting to: ${response.url}`);
+                    window.location.href = response.url;
+                } else if (response.ok) {
+                    alert("Your answer has been submitted successfully!");
+                } else {
+                    throw new Error(`Submission failed: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error("Error submitting the answer:", error);
+                alert("Failed to submit your answer. Please try again later.");
+            }
+        };
+
+        /**
+         * Funkcja sprawdzająca nowy URL i przeładowywanie pytania
+         */
+        const reloadQuestionOnNewURL = () => {
+            test_state = getTestStateFromSearchParams(); // Pobieranie `id` i zapisywanie w zmiennej globalnej
+
+            if (test_state === null || test_state <= 0) {
+                console.error("Invalid or missing test_state detected in URL.");
+                document.getElementById("question-text").textContent =
+                    "Error: Invalid or missing test_state. Please check the link.";
+                return;
+            }
+
+            console.log(`Reloading question for test_state: ${test_state}`);
+            loadQuestion(test_state); // Pobieranie pytania z backendu
+        };
+
+        // Obsługa ładowania strony (pierwsze załadowanie)
+        window.addEventListener('DOMContentLoaded', reloadQuestionOnNewURL);
+
+        // Obsługa wysłania formularza
+        const form = document.getElementById('quiz-form');
+        form.addEventListener('submit', handleSubmit);
+    </script>
+</body>
+</html>

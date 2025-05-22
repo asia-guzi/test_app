@@ -1,7 +1,7 @@
 from __future__ import annotations
 #sluzy do tego zeby rozpoznac klasę, gdy chce sie do niej odwołać w jednej z jej metod, bo to oznacz\a ze ta klasa nie jest do konca zdefiniowana i inaczej python doda blad
 from .models import User
-from .schemas import DbUser #, TokenData, GetUser
+from .schemas import GetUser, DbUser, TokenData
 from .config import pwd_context, SECRET_KEY, ALGORITHM #, oauth2_scheme
 from db.dependencies import get_session
 # from sqlalchemy.orm import Session
@@ -19,8 +19,9 @@ from typing import Annotated
 
 
 import jwt
-from fastapi import Depends, HTTPException #, status
-# from jwt.exceptions import InvalidTokenError
+from fastapi import Depends, HTTPException, status
+
+from jwt.exceptions import InvalidTokenError
 
 
 #
@@ -55,6 +56,9 @@ class UserService:
     #     print("User saved! ..not really")
     #     return user_in_db
 
+
+
+
     def get_grades(self):
         pass
 
@@ -66,7 +70,6 @@ class UserService:
 
 
 class AccessServices:
-
     @staticmethod
     async def get_user(session: Annotated[AsyncSession, Depends(get_session)]
              ,username: str
@@ -124,11 +127,10 @@ class AccessServices:
         return encoded_jwt
 
     @classmethod
-    async def get_current_user(cls
-                               ,session: Annotated[AsyncSession, Depends(get_session)]):
+    async def get_current_user(cls):
 
-        user = await cls.get_user(username='nick', session=session)
-        return user
+        user = await cls.get_user(username='nick')
+
     # @classmethod
     # async def get_current_user( cls,
     #      token: Annotated[str, Depends(oauth2_scheme)]):
@@ -158,14 +160,14 @@ class AccessServices:
 
     @classmethod
     async def authenticate_user(cls
-                                , session : [AsyncSession, Depends(get_session)]
+                                # , session : Session = Depends(get_session)
                                 , username: str, password: str):
         #def fake_decode_token(token):
         """
         And another one to authenticate and return a user.
         """
 
-        user = await cls.get_user(username=username, session=session)
+        user = await cls.get_user(username=username)
         if not user:
             return False
         if not cls.verify_password(password, user.hashed_password):

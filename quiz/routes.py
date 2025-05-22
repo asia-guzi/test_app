@@ -1,10 +1,12 @@
 
+#test is avaialble only gor lohed in users, tgherefore the dependency get_current_active_user
 from typing import Annotated
 from fastapi import APIRouter, Depends, Response, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-# from users.services import AccessServices
-# #from users.config import  oauth2_scheme
+
+from users.services import AccessServices
+#from users.config import  oauth2_scheme
 from .services import TestService
 from .schemas import GetQuestion, UserResponse
 from db.dependencies import get_session
@@ -19,18 +21,19 @@ from users.models import User
 # )
 
 quiz_router = APIRouter(
-tags=['quiz']
+tags=['quiz'] #nie trzeba w kazdym z osobna, tylko mozna w routerze ustawic tags
 )
-
 current_user = User(nick='nick',save_password='pass')
-
-
 @quiz_router.get('/start') #, tags=['quiz'])
 async def start_tests( session : Annotated[AsyncSession, Depends(get_session) ]
                       ):
-    """     #current_user: Annotated[str, Depends(AccessServices.get_current_active_user)]
-       #,token: Annotated[str, Depends(oauth2_scheme)]"""
+    # return {"token": token}
+    # """     #current_user: Annotated[str, Depends(AccessServices.get_current_active_user)]
+    #    session : Annotated[AsyncSession, Depends(get_session) ]
+    #    #, response: Response
+    #    #,token: Annotated[str, Depends(oauth2_scheme)]"""
     #jesli jeszcze nie ma w sloniku - nie mozesz drugiego testu
+       # return current test
     print('bt')
 
     test_set = await TestService.create_test(current_user.nick, session)
@@ -44,6 +47,21 @@ async def start_tests( session : Annotated[AsyncSession, Depends(get_session) ]
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Test not avaiable")
     # return RedirectResponse('/question/1')
     return RedirectResponse(f'/frontend/question/{1}')
+
+
+
+    # for question in test_set:
+    #
+    #
+    #     print(f"Pytanie: {question.title}")
+    #     for answer in question.answers:  # Wszystko już jest w pamięci
+    #         print(f"- Odpowiedź: {answer.content}")
+    #         `
+    #
+    # # questions = await questions
+    # return test_set #questions
+
+
 
 
 @quiz_router.get("/frontend/question/{id}", tags=["quiz"])
@@ -79,6 +97,34 @@ def pass_answers(id: int
         ):
     print(question)
     return TestService.submit_answer(user='nick', id=id, question=question)
+
+
+#
+# # would it be better to distinguish on @app.get('/question/{id}') and @app.post('/question/{id}') -decided to distinguish
+# @app.api_route('/question/{id}', methods=['GET', 'POST'])
+# #async
+# def pass_answers(id: int, request: Request, question : TestQuestion = None, response: Annotated[UserResponse, Form()] = None):
+#
+#     if request.method == "GET":
+#         question = questions_sample[id-1]
+#         print(question)
+#         if id <= test_size:
+#             return question
+#         else:
+#             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+#
+#
+#
+#     if request.method == "POST":
+#
+#         print(response)
+#
+#         if id < test_size:
+#             return RedirectResponse(f'/question/{id+1}')
+#         elif id == test_size :
+#             return RedirectResponse('/end_test')
+#         else:
+#             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 @quiz_router.get('/end_test', tags=['quiz']) #is it ok to be get, when i create test outcome in backend|?

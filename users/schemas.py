@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 
+
 class BaseUser(BaseModel):
     nick: str | None = None
     name: str
@@ -13,13 +14,14 @@ class DbUser(BaseUser):
     disabled : bool = False
     # student / teacher -> teacher does not create account, he gets one created from asministrator, so by the side is omnly possible to create student
 
-    class Config:
+    class Config():
         from_attributes = True
+
+
 
 
 class GetUser(BaseUser):
     password: str
-
 
 class ReturnUser(BaseUser):
     pass
@@ -28,7 +30,6 @@ class ReturnUser(BaseUser):
 class Token(BaseModel):
     access_token: str
     token_type: str
-
 
 class TokenData(BaseModel):
     username: str | None = None
