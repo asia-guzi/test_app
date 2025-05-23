@@ -1,5 +1,5 @@
 # app/dependencies.py
-from app.db.config import async_session
+from .config import async_session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Zależność zarządzająca sesją SQLAlchemy ORM

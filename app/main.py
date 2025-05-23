@@ -8,7 +8,7 @@ from fastapi import FastAPI
 # from sqlalchemy.orm import joinedload, Session
 # from users.users import Question, Answer
 # from db.dependencies import get_session
-from app.quiz.routes import quiz_router
+from quiz.routes import quiz_router
 
 
 
