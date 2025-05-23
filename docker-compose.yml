@@ -13,8 +13,8 @@ services:
       - db
     environment:
       DATABASE_URL: ${DATABASE_URL}
-#    command: >
-#      bash -c "python3 initial_populate/initial.py && uvicorn app.users.main:app --host 0.0.0.0 --port 8000"
+    command: >
+      bash -c "python3 initial_populate/initial.py && uvicorn main:app --host 0.0.0.0 --port 8000"
 
   db:
     image: mysql:8.0
