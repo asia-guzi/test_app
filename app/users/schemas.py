@@ -14,7 +14,7 @@ class DbUser(BaseUser):
     disabled : bool = False
     # student / teacher -> teacher does not create account, he gets one created from asministrator, so by the side is omnly possible to create student
 
-    class Config():
+    class Config:
         from_attributes = True
 
 

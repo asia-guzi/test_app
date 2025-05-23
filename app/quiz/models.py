@@ -14,9 +14,6 @@ class Question(Base):
     #technical requirements of the relationship checked by check_valid_answers trigger
 
 
-
-
-
 # each answer is connected to particular question, has attribute indicating a correct answer
 class Answer(Base):
     __tablename__ = "answers"
@@ -39,6 +36,4 @@ class TestResult(Base):
     start_time = Column(DateTime)
     outcome = Column(Float, nullable=False) #number of crrect answers / all questions
     user = relationship("User", back_populates="tests")
-
-
 

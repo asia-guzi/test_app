@@ -1,10 +1,8 @@
-import sys
-import os
-
-# Dodanie folderu nadrzędnego (`../`) do sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-print(sys.path)
-
+# import sys
+# import os
+# up folder (`../`) to sys.path
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from typing import Optional
 from app.db.config import async_engine, async_session, Base
 from app.quiz.models import Question, Answer
 from app.users.models import User
@@ -143,7 +141,7 @@ async def insert_data() -> None:
             print(f"Error during data adding: {e}")
 
 
-async def insert_user(nick: str, plain_password: str) -> User:
+async def insert_user(nick: str, plain_password: str) -> Optional[User]:
     """
     Creates example user in DB
 

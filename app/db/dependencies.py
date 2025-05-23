@@ -9,10 +9,11 @@ async def get_session() -> AsyncSession:
 
     :return: AsyncSession - An instance containing the selected questions.
     """
+    #which option?
     # session = async_session()
     # try: #try to catch eg. rollback
-    #     yield session  # Udostępnienie sesji
+    #     yield session
     # finally:
-    #     await session.close()  # Zamknięcie sesji po zakończeniu
+    #     await session.close()
     async with async_session() as session:
         yield session
