@@ -37,8 +37,6 @@ class TestService:
         :return:
         """
 
-
-
         result_dupl = await session.execute(
             select(Question)
             .order_by(func.random())  # Random question order
@@ -49,18 +47,6 @@ class TestService:
 
         # result = result_dupl.unique() -> tyu zapytanie bylo nieprzetworzone wiec nie dzoialala konwersja typow
         result = result_dupl.scalars().unique().all()
-
-        # sync by byłp
-        #         (  # zamienic na execute query i doda
-        #             session.query(Question)
-        #             .options(joinedload(Question.answers))  # need a complet of Q + A
-        #             .order_by(func.random())  # select questions from base at random
-        #             .limit(test_size)
-        #             .all())
-
-        # Bezpośrednia konwersja ORM -> Pydantic przy pomocy from_orm() - mozliwa dzieki  class Config:
-        #         orm_mode = True  # Pozwala mapować odpowiedzi i pytania z ORM
-        # questions = [AnsweredQuestion.model_validate(q) for q in result.scalars().all()]
 
         questions = [ AnsweredQuestion(
             question=DbQuestion.model_validate(question),
@@ -89,7 +75,6 @@ class TestService:
         cls.current_tests[user] = test
           # test.questions = await get_questions(test.size)
           #
-        print(test.questions, '\n TESTS')
         return test
 
 
@@ -98,7 +83,6 @@ class TestService:
     async def get_question(cls, user : str, id: int):
 
         test = cls.current_tests[user]
-        print(F'USER OF TEST {user} \n QUESTION ID {id}, \n QUESTION {test.questions[test.state -1]}')
 
         #change it to separate verify_test_state(self)
         if id != test.state:
@@ -134,14 +118,11 @@ class TestService:
     def validate_answer(self, test_question: AnsweredQuestion, user_answer: UserResponse):
 
         #generator - zeby mi znalazł prawdziwą odp i przestał szukać
-        print('validate_answer')
         true_id = next(answer.id for answer in test_question.answers if answer.ans_validation)
-        print('true_id', true_id)
-        print('true_ans' , user_answer.chosen_answer_id)
+
         if true_id == user_answer.chosen_answer_id:
             #raise outcome if true answer
             self.true_ans += 1
-            print('true_ans in ', self.true_ans )
 
     def validate_question(self,  question : UserResponse):
         """
@@ -149,12 +130,10 @@ class TestService:
         :param question:
         :return:
         """
-        print('validate_question')
         #
         # true_ans = question.answers.ans_validation
         # pass= self.clean_text()
         test_question = self.questions[self.state - 1]
-        print(test_question.question.id , question.chosen_question_id)
         if test_question.question.id != question.chosen_question_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -168,30 +147,23 @@ class TestService:
 
         test = cls.current_tests[user]
 
-
-
         # change it to separate verify_test_state(self)
         if id != test.state:
             # if user tries to skip / go back to questoion
             error_message = "An attempt to skip or go back to question is not allowed"
             return RedirectResponse(url=f"/question/{test.state}?error={error_message}")
-        print(f'bf: id {id}, state {test.state }')
 
 
         test.validate_question(question)
 
         test.state += 1
 
-        print(f'af: id {id}, state {test.state }')
         if id < test.size: #not lastr question
-            print('ok')
             # return RedirectResponse(f'/question/{id + 1}')
             return RedirectResponse(f'/frontend/question/{id + 1}',
                                     status_code=303)  # Wymusza metodę GET podczas przekierowania
 
         elif id == test.size: #last question
-            print('end')
-            print(test)
             return RedirectResponse(url='/end_test',  status_code=303) # GET#, status_code=307)  # Zachowuje metodę POST)
             # return JSONResponse(content={"redirect_url": "/end_test"}, status_code=200)
             #json response, bo jak bylo redirect, to z jakiegos powodu metoda wywoływała sie 2 razy i 2 razy zapisywała do db
@@ -206,13 +178,9 @@ class TestService:
         :return:
         """
 
-        print ('bf test')
 
-        print(cls.current_tests)
         test = cls.current_tests[user]
-        print('bf outcome')
         outcome = round(test.true_ans / test.size * 100, 2)
-        #pass the submision into db
 
         test_result =    TestOutcome(   users_id = test.test_user #.id
                                         , end_time = datetime.now()
@@ -230,50 +198,3 @@ class TestService:
         await session.refresh(to_db)
 
         return {"message": f"test finished, your grade is {outcome} %"}
-
-# class QuestionService():
-    # Code above omitted 👆
-    #
-    # @
-    # async def create_hero(hero: Hero, session: SessionDep) -> Hero:
-    #     """https://fastapi.tiangolo.com/tutorial/sql-databases/#create-a-hero
-    #
-    #     https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html
-    #     async_scoped_session includes proxy behavior similar to that of scoped_session, which means it can be treated as a AsyncSession directly, keeping in mind that the usual await keywords are necessary, including for the async_scoped_session.remove() method:
-    #
-    #     async def some_function(some_async_session, some_object):
-    #     # use the AsyncSession directly
-    #     some_async_session.add(some_object)
-    #
-    #     # use the AsyncSession via the context-local proxy
-    #     await AsyncScopedSession.commit()
-    #
-    #     # "remove" the current proxied AsyncSession for the local context
-    #     await AsyncScopedSession.remove()
-    #     """
-    #     await  session.add(hero)
-    #     session.commit()
-    #     await session.refresh(hero)
-    #     return hero
-#
-#     # Code above omitted 👆
-#
-#     @app.get("/heroes/")
-#     def read_heroes(
-#             session: SessionDep,
-#             offset: int = 0,
-#             limit: Annotated[int, Query(le=100)] = 100,
-#     ) -> list[Hero]:
-#         heroes = session.exec(select(Hero).offset(offset).limit(limit)).all()
-#         return heroes
-#
-#     # Code above omitted 👆
-#
-#     @app.delete("/heroes/{hero_id}")
-#     def delete_hero(hero_id: int, session: SessionDep):
-#         hero = session.get(Hero, hero_id)
-#         if not hero:
-#             raise HTTPException(status_code=404, detail="Hero not found")
-#         session.delete(hero)
-#         session.commit()
-#         return {"ok": True}
