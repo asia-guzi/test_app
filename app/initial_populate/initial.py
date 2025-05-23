@@ -18,6 +18,10 @@ from sqlalchemy.exc import OperationalError
 
 
 async def main():
+    """
+    in case db is not yet initialized
+    creates tables and insert initial data
+    """
     if not await is_initialized():
         await create_db()
         #upgrade()
@@ -25,9 +29,11 @@ async def main():
         await insert_user('user', 'user')
         await mark_as_initizlized()
 
-async def is_initialized():
+async def is_initialized() -> bool:
     """
-    returns true if db is created and initialized, else false
+    returns true if db is already initialized, false otherwise
+
+    :return: bool
     """
     async with async_session() as session:
         try:
@@ -40,7 +46,10 @@ async def is_initialized():
             #table does not yet exist
             return False
 
-async def mark_as_initizlized():
+async def mark_as_initizlized() -> None:
+    """
+    adds initialized flag after db initialization
+    """
     async with async_session() as session:
         try:
            session.add(DbCreated( creation_flag = True
@@ -49,15 +58,21 @@ async def mark_as_initizlized():
         except Exception as e:
             await session.rollback()
             print(f"Error during flag creation: {e}")
-async def create_db():
+
+
+async def create_db() -> None:
     """
-    to create tables
+    function creates tables in DB based on defined models
     """
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+
 # Insert questions and answers
-async def insert_data():
+async def insert_data() -> None:
+    """
+    Function creates questions with answers in db (example data)
+    """
     # Questions to insert
     questions = [
         {"question": "What is 1 + 1?", "answers": [("2", True), ("3", False), ("4", False), ("5", False)]},
@@ -125,27 +140,34 @@ async def insert_data():
             await session.commit()
         except Exception as e:
             await session.rollback()
-            print(f"Błąd podczas dodawania użytkownika: {e}")
+            print(f"Error during data adding: {e}")
 
 
 async def insert_user(nick: str, plain_password: str) -> User:
+    """
+    Creates example user in DB
+
+    :param nick: str nick of new user
+    :param plain_password: str password of new user
+    :return: User - instance of model User
+    """
     async with async_session() as session:
         try:
-            # Czy użytkownik z podanym nickiem już istnieje?
+            #check if such user exists
                 stmt = select(User).where(User.nick == nick)
                 result = await session.execute(stmt)
                 existing_user = result.scalars().first()
 
-                # Jeśli istnieje, zwróć komunikat
+                # do not continue if exists
                 if existing_user:
-                    print(f"Użytkownik z nickiem '{nick}' już istnieje!")
+                    print(f"User '{nick}' already exists")
                     return None
 
-                # Hashowanie hasła
+                # hash password
                 hashed_password = AccessServices.get_password_hash(plain_password)
 
 
-                # Tworzenie obiektu użytkownika
+                # create user instance
                 new_user = User(
                     nick=nick,
                     save_password=hashed_password,
@@ -156,18 +178,18 @@ async def insert_user(nick: str, plain_password: str) -> User:
 
                 )
 
-                # Dodanie do sesji i zapis do bazy
+                # add user to db
                 session.add(new_user)
                 await session.commit()
-                await session.refresh(new_user)  # Pobranie odświeżonego obiektu z bazy
+                await session.refresh(new_user)
 
-                print(f"Użytkownik '{nick}' został dodany do bazy danych.")
-                return new_user  # Zwróć dodanego użytkownika
+                print(f"User '{nick}' added")
+                return new_user
 
         except Exception as e:
-            # W przypadku błędu wycofaj transakcję
+            # rollback in case of error
             await session.rollback()
-            print(f"Błąd podczas dodawania użytkownika: {e}")
+            print(f"Error during user adding: {e}")
             return None
 
 if __name__ == "__main__":

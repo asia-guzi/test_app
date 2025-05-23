@@ -37,6 +37,8 @@ class TestService:
         :return:
         """
 
+
+
         result_dupl = await session.execute(
             select(Question)
             .order_by(func.random())  # Random question order

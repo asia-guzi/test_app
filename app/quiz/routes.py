@@ -12,9 +12,6 @@ from app.db.dependencies import get_session
 from .config import TEST_SIZE
 from app.users.models import User
 
-
-
-
 # quiz_router = APIRouter(
 #     dependencies=[Depends(oauth2_scheme)]  # Globalne wymuszanie tokenu
 # )
@@ -22,10 +19,19 @@ from app.users.models import User
 quiz_router = APIRouter(
 tags=['quiz'] #nie trzeba w kazdym z osobna, tylko mozna w routerze ustawic tags
 )
+
 current_user = User(nick='nick',save_password='pass')
+
 @quiz_router.get('/start') #, tags=['quiz'])
 async def start_tests( session : Annotated[AsyncSession, Depends(get_session) ]
-                      ):
+                      ) -> RedirectResponse:
+    """
+    Asynchronous operation to fetch random questions from the database.
+    :param session: AsyncSession - The database session used for querying data.
+    :param test_size: int - The number of random questions to fetch.
+    :return: TestService - An instance containing the selected questions.
+    """
+
     # return {"token": token}
     # """     #current_user: Annotated[str, Depends(AccessServices.get_current_active_user)]
     #    session : Annotated[AsyncSession, Depends(get_session) ]
