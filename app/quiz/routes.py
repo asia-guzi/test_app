@@ -56,7 +56,7 @@ async def serve_static_question(id: int) -> RedirectResponse:
     :return: RedirectResponse - rout to the for the current front
     """
 
-    url_with_id = f"/static/question.html?id={id}"
+    url_with_id = f"/app/static/question.html?id={id}"
     return RedirectResponse(url_with_id)
 
 
