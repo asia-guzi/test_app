@@ -1,16 +1,16 @@
 #https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/
 FROM python:3.10
-WORKDIR /test_app
+WORKDIR /app
 
 # Install the application dependencies
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy in the source code
-COPY ./app /test_app/
+COPY ./app /app/
 # COPY ../test_app ./src
 
-ENV PYTHONPATH=/test_app
+ENV PYTHONPATH=/app
 
 EXPOSE 8000
 

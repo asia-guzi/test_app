@@ -1,7 +1,14 @@
-# import sys
-# import os
-# up folder (`../`) to sys.path
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import sys
+import os
+# Ścieżka katalogu nadrzędnego
+parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+# Dodaj tylko wtedy, gdy jeszcze tego nie ma w sys.path
+if parent_path not in sys.path:
+    sys.path.append(parent_path)
+
+
+
 from typing import Optional
 from app.db.config import async_engine, async_session, Base
 from app.quiz.models import Question, Answer
