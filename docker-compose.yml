@@ -6,6 +6,8 @@ services:
   backend:
     build:
       context: .
+    env_file:
+      - .env
     container_name: test_app_backend
     ports:
       - "8000:8000"
@@ -42,6 +44,8 @@ services:
   initial_populate:
     build:
       context: .
+    env_file:
+      - .env
     depends_on:
       - db
     environment:
@@ -51,7 +55,7 @@ services:
       DATABASE_PASSWORD: ${MYSQL_PASSWORD}
       DATABASE_NAME: ${MYSQL_DATABASE}
     command: >
-      python3 ./initial_populate/initial.py
+      python3 app/initial_populate/initial.py
 
 
 
