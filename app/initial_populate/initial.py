@@ -20,6 +20,7 @@ import asyncio
 from app.initial_populate.models import DbCreated
 from datetime import datetime
 from sqlalchemy.exc import ProgrammingError, OperationalError
+from sqlalchemy import text
 
 
 async def main():
@@ -27,8 +28,8 @@ async def main():
     in case db is not yet initialized
     creates tables and insert initial data
     """
+    await wait_for_db()
     if not await is_initialized():
-        await wait_for_db()
         await create_db()
         #upgrade()
         await insert_data()
@@ -40,10 +41,10 @@ async def wait_for_db():
     During start of project - checks if db is already created
     by trying to connect every 2 seconds
     """
-    for _ in range(10):
+    for _ in range(60):
         try:
             async with async_engine.connect() as conn:
-                await conn.execute("SELECT 1")
+                await conn.execute(text("SELECT 1"))
             print("DB is ready")
             return
         except OperationalError:
