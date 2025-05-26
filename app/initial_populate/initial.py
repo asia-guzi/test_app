@@ -1,11 +1,11 @@
-import sys
-import os
-# Ścieżka katalogu nadrzędnego
-parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-# Dodaj tylko wtedy, gdy jeszcze tego nie ma w sys.path
-if parent_path not in sys.path:
-    sys.path.append(parent_path)
+# import sys
+# import os
+# # Ścieżka katalogu nadrzędnego
+# parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+#
+# # Dodaj tylko wtedy, gdy jeszcze tego nie ma w sys.path
+# if parent_path not in sys.path:
+#     sys.path.append(parent_path)
 
 
 
@@ -17,9 +17,9 @@ from app.users.models import User
 from app.users.services import AccessServices
 from sqlalchemy.future import select
 import asyncio
-from .models import DbCreated
+from app.initial_populate.models import DbCreated
 from datetime import datetime
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import ProgrammingError #OperationalError
 
 
 async def main():
@@ -47,7 +47,7 @@ async def is_initialized() -> bool:
             flag = result.scalars().first()
             return False if flag is None else flag #if no record <=> false
 
-        except OperationalError:
+        except ProgrammingError:
             #table does not yet exist
             return False
 
@@ -63,6 +63,7 @@ async def mark_as_initizlized() -> None:
         except Exception as e:
             await session.rollback()
             print(f"Error during flag creation: {e}")
+
 
 
 async def create_db() -> None:

@@ -17,5 +17,5 @@ app.include_router(quiz_router)
 def index():
     #insert click to route @app.get('/start')
     return {'message' : 'Welcome to a test , after you log in there is 30 min to fulfill the test '}
-#(30 min topken)
+#(30 min token)
 
