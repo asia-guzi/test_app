@@ -45,26 +45,31 @@
     "DefaultHtmlFileTemplate": "HTML File",
     "Python tests.Python tests in test_main.py.executor": "Run",
     "Python tests.Python tests in test_schemas.py.executor": "Run",
+    "Python tests.pytest in initial_idea.py.executor": "Run",
+    "Python tests.pytest in test_main.py.executor": "Run",
     "Python.initial.executor": "Run",
     "Python.initial_populate.executor": "Run",
     "Python.main.executor": "Run",
+    "Python.services.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "C:/Users/joanna_guziwelakis/Desktop/Asia/test_app/static",
+    "last_opened_file_path": "C:/Users/joanna_guziwelakis/Desktop/Asia/test_app/tests",
     "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\tests" />
+      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\tests\test_db" />
+      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\tests\test_users" />
       <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\static" />
       <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\access" />
-      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\tests" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\tests\test_initial_populate" />
+      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\tests\test_quiz" />
       <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app" />
       <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\app" />
       <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\start_project\.ipynb_checkpoints" />
-      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\tests" />
-      <recent name="C:\Users\joanna_guziwelakis\Desktop\Asia\test_app\users" />
     </key>
   </component>
   <component name="SharedIndexes">
