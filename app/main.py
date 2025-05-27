@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from app.quiz.routes import quiz_router
 from fastapi.staticfiles import StaticFiles
@@ -6,7 +7,9 @@ from fastapi.staticfiles import StaticFiles
 app = FastAPI()
 # Mount folder "static" jako miejsce, z którego serwowana będzie zawartość frontendu
 
-app.mount("/app/static", StaticFiles(directory="app/static"), name="question")
+# app.mount("/app/static", StaticFiles(directory="./static"), name="question") #works from here, does not work from tests
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/app/static", StaticFiles(directory=static_dir), name="static")
 
 app.include_router(quiz_router)
 

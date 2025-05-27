@@ -2,10 +2,11 @@ from pydantic import ValidationError
 
 from app.quiz.models import Question, TestResult
 from app.quiz.schemas import AnsweredQuestion, UserResponse, DbAnswer, DbQuestion, GetQuestion, IdentifiedAnswer, TestOutcome
-from .config import TEST_SIZE
+from app.quiz.config import TEST_SIZE
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
-from sqlalchemy import select, func, SQLAlchemyError
+from sqlalchemy import select, func
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 from fastapi.responses import RedirectResponse
 from datetime import datetime
