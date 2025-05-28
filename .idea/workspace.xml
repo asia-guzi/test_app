@@ -47,6 +47,7 @@
     "Python tests.Python tests in test_schemas.py.executor": "Run",
     "Python tests.pytest in initial_idea.py.executor": "Run",
     "Python tests.pytest in test_main.py.executor": "Run",
+    "Python tests.pytest in test_services.py.executor": "Run",
     "Python.initial.executor": "Run",
     "Python.initial_populate.executor": "Run",
     "Python.main.executor": "Run",

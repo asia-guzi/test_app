@@ -103,7 +103,7 @@ class TestService:
 
 
     @classmethod
-    async def get_question(cls, user : str, id: int) -> Union[GetQuestion, RedirectResponse]:
+    async def get_question(cls, user : str, id: int) -> Union[GetQuestion, RedirectResponse, HTTPException]:
 
         test = cls.current_tests[user]
 

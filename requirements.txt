@@ -13,6 +13,8 @@ ipykernel
 asyncmy
 cryptography
 bcrypt
+pytest-mock
+pytest-asyncio
 
 # pytest-asyncio
 # httpx
