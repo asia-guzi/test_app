@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.quiz.services import TestService
 from app.quiz.models import Question
-from app.quiz.schemas import DbQuestion, DbAnswer, AnsweredQuestion
+from app.quiz.schemas import DbQuestion, DbAnswer, AnsweredQuestion, GetQuestion
 from datetime import datetime
 
 import pytest
@@ -15,7 +15,7 @@ from app.quiz.services import TestService
 from datetime import datetime
 
 # TEST_SIZE = default_test_size()
-# create_test
+#-- create_test
 # random_questions
 # get_question
 # submit_answer
@@ -23,27 +23,133 @@ from datetime import datetime
 # validate_answer
 # submit_test
 
+@pytest.mark.asyncio
+async def test_get_question_in_right_order_success(data_for_tests, mock_test_service_instance_bounded, mock_current_user, default_test_size):
+    user = mock_current_user.nick
+    test = data_for_tests
+
+    size = default_test_size
+    for id in range(size):
+        print(id+1)
+        result = await TestService.get_question(user, id+1)
+
+        compare = test[id]
+
+        assert isinstance(result, GetQuestion)
+        assert result.question == compare["question"]
+
+
 
 @pytest.mark.asyncio
 async def test_create_test_with_user(mock_async_session, mock_current_user, default_test_size, mock_random_questions):
     session_mock = mock_async_session
     user = mock_current_user.nick
 
-    # Wywołanie `create_test`
+    # call create_test
     test_service_instance = await TestService.create_test(user=user, session=session_mock)
 
-    # Assert: Użytkownik poprawnie przypisany do `current_tests`
+    #assert if function returns right class instance
+    assert isinstance(test_service_instance, TestService)
+
+    # assert if test not properly bound with user
     assert TestService.current_tests[user] == test_service_instance
 
-    # Sprawdzenie struktury test_service_instance
-    assert len(test_service_instance.questions) == default_test_size
-
-    # Sprawdzenie struktury pierwszego pytania
-    question = test_service_instance.questions[0]
-    assert question.question.id == 1
-    assert question.question.question == "Question 1"
-
-
+#
+# @pytest.mark.asyncio
+# async def test_random_questions_success(mock_async_session, default_test_size):
+#     # Wywołanie metody `random_questions`
+#     result = await TestService.random_questions(session=mock_async_session, test_size=default_test_size)
+#
+#     # Assert: wynik powinien być instancją TestService
+#     assert isinstance(result, TestService)
+#
+#     # Assert: długość pytań odpowiada test_size
+#     assert len(result.questions) == default_test_size
+#
+#     # Assert: pierwsze pytanie zawiera prawidłowe dane
+#     first_question = result.questions[0]
+#     assert first_question.question.id == 1
+#     assert first_question.question.question == "Question 1"
+#     assert len(first_question.answers) == 1
+#     assert first_question.answers[0].answer == "Answer 1"
+#     # assert first_question.answers[0].ans_validation is True
+#
+# @pytest.mark.asyncio
+# async def test_mock_chain_calls(mock_async_session):
+#     # Wywołanie metody random_questions
+#     await TestService.random_questions(session=mock_async_session, test_size=5)
+#
+#     # Assert: Czy execute zostało wywołane?
+#     mock_async_session.execute.assert_called_once()
+#     # Assert: Czy scalars() zostało wywołane?
+#     mock_async_session.execute.return_value.scalars.assert_called_once()
+#     # Assert: Czy unique() zostało wywołane?
+#     mock_async_session.execute.return_value.scalars.return_value.unique.assert_called_once()
+#     # Assert: Czy all() zostało wywołane?
+#     mock_async_session.execute.return_value.scalars.return_value.unique.return_value.all.assert_called_once()
+#
+# @pytest.mark.asyncio
+# async def test_random_questions_success(mock_async_session, default_test_size, data_for_tests):
+#     result = await TestService.random_questions(session=mock_async_session, test_size=default_test_size)
+#
+#     assert isinstance(result, TestService)
+#     assert len(result.questions) == default_test_size
+#
+# #
+# @pytest.mark.asyncio
+# async def test_random_questions_success( mock_async_session, ):
+#     @classmethod
+#     async def random_questions(cls
+#                                , session: AsyncSession
+#                                , test_size: int
+#                                # , user: User
+#                                ) -> 'TestService':
+#         """
+#         Selects questions for db at random, and creates TestService instance for user
+#
+#         :param session : AsyncSession
+#         :param test_size : int
+#         :return: TestService
+#         :raises HTTPException:
+#             - 502 BAD GATEWAY in case of database error of any kind
+#             - 404 NOT FOUND if for some reason there are more or less questions found in db then needed
+#             - 500 INTERNAL SERVER ERROR if the retrieved data fails validation
+#         """
+#
+#         try:
+#             # select questions at random
+#             result_dupl = await session.execute(
+#                 select(Question)
+#                 .order_by(func.random())  # Random question order
+#                 .limit(test_size)  # Number of questions
+#                 .options(joinedload(Question.answers))  # Eager loading answers
+#             )
+#             result = result_dupl.scalars().unique().all()
+#
+#         except SQLAlchemyError:
+#             # would it be ok to add here wait_for_db()? -> to wait a moment for db before exception raise>?
+#             raise HTTPException(status.HTTP_502_BAD_GATEWAY
+#                                 , detail="Failed to get the test questions from db")
+#
+#         if len(result) != TEST_SIZE:
+#             # eg. not enough questions in db
+#             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND
+#                                 , detail="Test questions not found")
+#
+#         try:
+#             # transform result for TestService purposes (validation based on Pydantic model
+#             questions = [AnsweredQuestion(
+#                 question=DbQuestion.model_validate(question),
+#                 answers=random.sample(
+#                     [DbAnswer.model_validate(answer) for answer in question.answers],
+#                     len(question.answers))
+#                 # as (at least in sample data) always the first answer is true - change order
+#             ) for question in result]
+#         except ValidationError:
+#             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#
+#         # Validation of new test
+#         return cls(questions=questions)  # , user
 
 
 

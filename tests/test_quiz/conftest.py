@@ -4,6 +4,7 @@ from app.quiz.services import TestService
 import pytest
 from app.quiz.services import TestService
 from app.quiz.schemas import AnsweredQuestion, DbQuestion, DbAnswer
+from app.quiz.models import Question, Answer
 
 @pytest.fixture
 def default_test_size():
@@ -12,14 +13,8 @@ def default_test_size():
     """
     return 5 # == len of questions_data im mock_test_service
 
-
-
 @pytest.fixture
-def mock_test_service():
-    """
-    Fixture dla instancji TestService z użyciem symulacji rzeczywistych modeli.
-    """
-    # Symulacja pytań, jakby pochodziły z funkcji random_questions
+def data_for_tests():
     questions_data = [
         {
             "id": 1,
@@ -57,6 +52,16 @@ def mock_test_service():
             ],
         },
     ]
+    return questions_data
+
+
+@pytest.fixture
+def mock_test_service_instance(data_for_tests):
+    """
+    deliver TestService instance
+    """
+    # Symulacja pytań, jakby pochodziły z funkcji random_questions
+    questions_data = data_for_tests
 
     # Generujemy AnsweredQuestion na podstawie danych
     answered_questions = [
@@ -74,19 +79,51 @@ def mock_test_service():
 
     return TestService(questions=answered_questions)
 
-
-
+@pytest.fixture
+def mock_test_service_instance_bounded(mock_test_service_instance, mock_current_user):
+    test = mock_test_service_instance
+    nick = mock_current_user.nick
+    TestService.current_tests[nick] = test
 
 @pytest.fixture
-def mock_random_questions(mocker, mock_test_service):
+def mock_random_questions(mocker, mock_test_service_instance):
     """
-    Fixture do zamockowania metody `random_questions` dla klasy `TestService`.
+    imitate TestService.random_questions()
     """
     mock = mocker.patch.object(TestService, "random_questions")
-    mock.return_value = mock_test_service  # Użycie wygenerowanego mock_test_service
+    mock.return_value = mock_test_service_instance  # use mock_test_service
     return mock
 
+@pytest.fixture
+def mock_async_session(mocker, data_for_tests):
+    questions = [
+        Question(
+            id=data["id"],
+            question=data["question"],
+            answers=[
+                Answer(
+                    id=answer["id"],
+                    answer=answer["answer"],
+                    question_id=answer["question_id"],
+                    ans_validation=answer["ans_validation"],
+                )
+                for answer in data["answers"]
+            ],
+        )
+        for data in data_for_tests
+    ]
 
+    mock_execute = mocker.AsyncMock()
+    mock_scalars = mocker.MagicMock()
+    mock_unique = mocker.MagicMock()
+
+    mock_unique.all.return_value = questions
+    mock_scalars.unique.return_value = mock_unique
+    mock_execute.scalars.return_value = mock_scalars
+
+    mock_session = mocker.MagicMock()
+    mock_session.execute.return_value = mock_execute
+    return mock_session
 
 # # Deliver TestService instance
 # @pytest.fixture

@@ -15,6 +15,7 @@ from typing import Dict, Union
 
 
 class TestService:
+    __test__ = False  # pytest tried to performn tests here
 
     current_tests = {}
 

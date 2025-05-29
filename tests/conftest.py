@@ -8,16 +8,19 @@ import pytest
 
 
 
-@pytest.fixture
-def mock_async_session(mocker):
-    """
-     mock async session
-     """
-    return mocker.MagicMock()
+# @pytest.fixture
+# def mock_async_session(mocker):
+#     """
+#      mock async session
+#      """
+#     return mocker.MagicMock()
 
 # Deliver user
 @pytest.fixture
 def mock_current_user():
+    """
+    deliver User instance
+    """
     user = User(
         nick='test_nick',
         save_password='test_pass',
