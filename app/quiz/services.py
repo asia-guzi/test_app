@@ -15,6 +15,7 @@ from typing import Dict, Union
 
 
 class TestService:
+    __test__ = False  # pytest tried to performn tests here
 
     current_tests = {}
 
@@ -103,7 +104,7 @@ class TestService:
 
 
     @classmethod
-    async def get_question(cls, user : str, id: int) -> Union[GetQuestion, RedirectResponse]:
+    async def get_question(cls, user : str, id: int) -> Union[GetQuestion, RedirectResponse, HTTPException]:
 
         test = cls.current_tests[user]
 
@@ -125,9 +126,6 @@ class TestService:
                 #response=[answer.answer for answer in test_question.answers]
             )
 
-        else:
-            # id out of range
-            return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     # @staticmethod
     # def clean_text(text):
