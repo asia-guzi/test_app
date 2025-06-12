@@ -126,9 +126,6 @@ class TestService:
                 #response=[answer.answer for answer in test_question.answers]
             )
 
-        else:
-            # id out of range
-            return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     # @staticmethod
     # def clean_text(text):

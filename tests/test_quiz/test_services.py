@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.quiz.services import TestService
@@ -9,7 +9,7 @@ from app.quiz.schemas import DbQuestion, DbAnswer, AnsweredQuestion, GetQuestion
 from datetime import datetime
 
 import pytest
-from fastapi import HTTPException
+from fastapi.responses import RedirectResponse
 from sqlalchemy.exc import SQLAlchemyError
 from app.quiz.services import TestService
 from datetime import datetime
@@ -26,22 +26,67 @@ from datetime import datetime
 @pytest.mark.asyncio
 async def test_get_question_in_right_order_success(data_for_tests, mock_test_service_instance_bounded, mock_current_user, default_test_size):
     user = mock_current_user.nick
-    test = data_for_tests
+    test_instance = TestService.current_tests[user]
+    test_raw_data = data_for_tests
 
     size = default_test_size
     for id in range(size):
-        print(id+1)
         result = await TestService.get_question(user, id+1)
+        compare = test_raw_data[id]
 
-        compare = test[id]
-
+        test_instance.state += 1 # mock a part from tesrservice.submit_answer
         assert isinstance(result, GetQuestion)
         assert result.question == compare["question"]
 
+@pytest.mark.asyncio
+async def test_get_question_fail(data_for_tests, mock_test_service_instance_bounded, mock_current_user, default_test_size):
+    def compare_redirect_responses(response1: RedirectResponse, response2: RedirectResponse) -> bool:
+        return (
+                response1.status_code == response2.status_code and
+                response1.headers.get("location") == response2.headers.get("location")
+        )
 
+    user = mock_current_user.nick
+    test_instance = TestService.current_tests[user]
+    id = 2
+    test_instance.state = id # mock a part from tesrservice.submit_answer
+
+    error_message = "An attempt to skip or go back to question is not allowed"
+    compare =  RedirectResponse(url=f"/question/{id}?error={error_message}")
+
+    cases = {
+        'out_of_range_id' : default_test_size + 2
+        , 'negative_id' : -2
+        , 'skip_question' : id + 1
+        , 'redo_question' : id - 1
+    }
+
+    for id in cases.values():
+        result = await TestService.get_question(user, id)
+        assert isinstance(compare, RedirectResponse)
+        assert True == compare_redirect_responses(result, compare)
+
+
+
+# @pytest.mark.asyncio
+# async def test_get_question_question_out_of_range_fail(data_for_tests, mock_test_service_instance_bounded, mock_current_user, default_test_size):
+#     user = mock_current_user.nick
+#     # test_instance = TestService.current_tests[user]
+#     # test_raw_data = data_for_tests
+#
+#
+#     out_of_range_id = default_test_size + 2
+#     result = await TestService.get_question(user, out_of_range_id)
+#     compare = HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+#
+#
+#     assert isinstance(result, HTTPException)
+#     assert result == compare
 
 @pytest.mark.asyncio
 async def test_create_test_with_user(mock_async_session, mock_current_user, default_test_size, mock_random_questions):
+
+
     session_mock = mock_async_session
     user = mock_current_user.nick
 

@@ -6,12 +6,7 @@ from app.quiz.services import TestService
 from app.quiz.schemas import AnsweredQuestion, DbQuestion, DbAnswer
 from app.quiz.models import Question, Answer
 
-@pytest.fixture
-def default_test_size():
-    """
-    mock test size
-    """
-    return 5 # == len of questions_data im mock_test_service
+
 
 @pytest.fixture
 def data_for_tests():
@@ -54,9 +49,15 @@ def data_for_tests():
     ]
     return questions_data
 
+@pytest.fixture
+def default_test_size(data_for_tests):
+    """
+    mock test size
+    """
+    return len(data_for_tests) # == len of questions_data im mock_test_service
 
 @pytest.fixture
-def mock_test_service_instance(data_for_tests):
+def mock_test_service_instance(data_for_tests, default_test_size):
     """
     deliver TestService instance
     """
@@ -76,8 +77,10 @@ def mock_test_service_instance(data_for_tests):
         )
         for data in questions_data
     ]
+    test = TestService(questions=answered_questions)
+    test.size=default_test_size # override default app TEST_SIZE varoable
+    return test
 
-    return TestService(questions=answered_questions)
 
 @pytest.fixture
 def mock_test_service_instance_bounded(mock_test_service_instance, mock_current_user):
