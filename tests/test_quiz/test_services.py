@@ -13,6 +13,8 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.exc import SQLAlchemyError
 from app.quiz.services import TestService
 from datetime import datetime
+from tests.test_quiz.helpers import get_AnsweredQuestion_schema, mock_user_responses_collection
+
 
 # TEST_SIZE = default_test_size()
 #-- create_test
@@ -68,24 +70,8 @@ async def test_get_question_fail(data_for_tests, mock_test_service_instance_boun
 
 
 
-# @pytest.mark.asyncio
-# async def test_get_question_question_out_of_range_fail(data_for_tests, mock_test_service_instance_bounded, mock_current_user, default_test_size):
-#     user = mock_current_user.nick
-#     # test_instance = TestService.current_tests[user]
-#     # test_raw_data = data_for_tests
-#
-#
-#     out_of_range_id = default_test_size + 2
-#     result = await TestService.get_question(user, out_of_range_id)
-#     compare = HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-#
-#
-#     assert isinstance(result, HTTPException)
-#     assert result == compare
-
 @pytest.mark.asyncio
 async def test_create_test_with_user(mock_async_session, mock_current_user, default_test_size, mock_random_questions):
-
 
     session_mock = mock_async_session
     user = mock_current_user.nick
@@ -98,6 +84,112 @@ async def test_create_test_with_user(mock_async_session, mock_current_user, defa
 
     # assert if test not properly bound with user
     assert TestService.current_tests[user] == test_service_instance
+
+
+
+@pytest.mark.asyncio
+async def test_submit_answer_success():
+    pass
+
+
+
+def test_validate_question_success(mock_user_true_responses,
+                                    mock_test_service_instance_bounded, mock_current_user, data_for_tests, mock_validate_answer):
+
+    test = mock_test_service_instance_bounded
+    for response in mock_user_true_responses:
+        success_result = test.validate_question(response)
+        test.state += 1
+        assert success_result is None
+
+
+def test_validate_question_fail(mock_user_true_false,
+                                    mock_test_service_instance_bounded, mock_current_user, data_for_tests, mock_validate_answer):
+
+    test = mock_test_service_instance_bounded
+    for response in mock_user_true_false:
+        with pytest.raises(HTTPException) as result:
+            test.validate_question(response)
+        test.state += 1
+        assert isinstance(result.value, HTTPException)
+        assert result.value.status_code == status.HTTP_400_BAD_REQUEST
+
+# async def test_validate_question_fail(question, collection, mock_test_service_instance_bounded, mock_current_user,
+#                                        data_for_tests, default_test_size):
+#     test = mock_test_service_instance_bounded
+#
+#     failed_result = test.validate_question()
+#
+#     test.state += 1
+#
+#     assert result is None
+#     assert isinstance(result, HTTPException)
+#     assert result == HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+#
+# @pytest.mark.asyncio
+# def test_get_question_in_right_order_success(data_for_tests, mock_test_service_instance_bounded, mock_current_user, default_test_size):
+#     user = mock_current_user.nick
+#     test_instance = TestService.current_tests[user]
+#     test_raw_data = data_for_tests
+#
+#     size = default_test_size
+#     for id in range(size):
+#         result = await TestService.get_question(user, id+1)
+#         compare = test_raw_data[id]
+#
+#         test_instance.state += 1 # mock a part from tesrservice.submit_answer
+#         assert isinstance(result, GetQuestion)
+#         assert result.question == compare["question"]
+
+#
+# ----
+# def validate_question(self,  question : UserResponse)-> None:
+#         """
+#         if the proper question was answered - initiates answer validation
+#
+#         :param question: UserResponse
+#         :return: None
+#         """
+#
+#         # true_ans = question.answers.ans_validation
+#         # pass= self.clean_text()
+#
+#         test_question = self.questions[self.state - 1]
+#         if test_question.question.id != question.chosen_question_id:
+#             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+#
+#         self.validate_answer(test_question, question)
+#
+#         # if self.clean_text(question.response) == self.clean_text(true_answers):
+#         #     self.true_ans += 1 #if true add point to outcome
+
+
+@pytest.mark.parametrize('question, collection', mock_user_responses_collection())
+def test_validate_answer_cases(question, collection, mock_test_service_instance_bounded, mock_current_user, data_for_tests):
+    #check 4 true answer i dla false
+    test = mock_test_service_instance_bounded
+
+    # for question in data_for_tests:
+    # true answer - success
+    check_before_score = test.true_ans
+    test.validate_answer(test_question=get_AnsweredQuestion_schema(question), user_answer=collection['true_response'])
+    check_after_score = test.true_ans
+    assert check_before_score + 1 == check_after_score
+
+    # false_response
+    check_before_score = test.true_ans
+    test.validate_answer(test_question=get_AnsweredQuestion_schema(question), user_answer=collection['false_response'])
+    check_after_score = test.true_ans
+    assert check_before_score == check_after_score
+
+    # fake_response
+    check_before_score = test.true_ans
+    test.validate_answer(test_question=get_AnsweredQuestion_schema(question), user_answer=collection['nonexistent_response'])
+    check_after_score = test.true_ans
+    assert check_before_score == check_after_score
+
+
 
 #
 # @pytest.mark.asyncio

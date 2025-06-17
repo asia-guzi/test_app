@@ -3,51 +3,24 @@ import pytest
 from app.quiz.services import TestService
 import pytest
 from app.quiz.services import TestService
-from app.quiz.schemas import AnsweredQuestion, DbQuestion, DbAnswer
 from app.quiz.models import Question, Answer
+from app.quiz.schemas import UserResponse
+from tests.test_quiz.helpers import get_AnsweredQuestion_schema
+from unittest.mock import patch
 
 
+from tests.test_quiz.helpers import QUESTION_DATA
 
 @pytest.fixture
 def data_for_tests():
-    questions_data = [
-        {
-            "id": 1,
-            "question": "Question 1",
-            "answers": [
-                {"id": 1, "answer": "Answer 1", "question_id": 1, "ans_validation": True}
-            ],
-        },
-        {
-            "id": 2,
-            "question": "Question 2",
-            "answers": [
-                {"id": 2, "answer": "Answer 2", "question_id": 2, "ans_validation": True}
-            ],
-        },
-        {
-            "id": 3,
-            "question": "Question 3",
-            "answers": [
-                {"id": 3, "answer": "Answer 3", "question_id": 3, "ans_validation": True}
-            ],
-        },
-        {
-            "id": 4,
-            "question": "Question 4",
-            "answers": [
-                {"id": 4, "answer": "Answer 4", "question_id": 4, "ans_validation": True}
-            ],
-        },
-        {
-            "id": 5,
-            "question": "Question 5",
-            "answers": [
-                {"id": 5, "answer": "Answer 5", "question_id": 5, "ans_validation": True}
-            ],
-        },
-    ]
-    return questions_data
+    return QUESTION_DATA
+
+
+@pytest.fixture
+def mock_validate_answer():
+    with patch.object(TestService, 'validate_answer', return_value=None) as mock_method:
+        yield mock_method
+
 
 @pytest.fixture
 def default_test_size(data_for_tests):
@@ -55,6 +28,7 @@ def default_test_size(data_for_tests):
     mock test size
     """
     return len(data_for_tests) # == len of questions_data im mock_test_service
+
 
 @pytest.fixture
 def mock_test_service_instance(data_for_tests, default_test_size):
@@ -66,15 +40,7 @@ def mock_test_service_instance(data_for_tests, default_test_size):
 
     # Generujemy AnsweredQuestion na podstawie danych
     answered_questions = [
-        AnsweredQuestion(
-            question=DbQuestion.model_validate(
-                {"id": data["id"], "question": data["question"]}
-            ),
-            answers=random.sample(
-                [DbAnswer.model_validate(answer) for answer in data["answers"]],
-                len(data["answers"]),
-            ),
-        )
+        get_AnsweredQuestion_schema(data)
         for data in questions_data
     ]
     test = TestService(questions=answered_questions)
@@ -83,10 +49,49 @@ def mock_test_service_instance(data_for_tests, default_test_size):
 
 
 @pytest.fixture
+def mock_user_true_responses():
+    """
+    generator of set of user's collections for each question in test set
+    """
+    responses = []
+    for question in QUESTION_DATA:
+
+        question_id = question['id']
+
+        for answer in question['answers']:
+            if answer['ans_validation'] == True:
+               responses.append(UserResponse(
+                    chosen_question_id = question_id
+                    , chosen_answer_id = answer['id']
+                ))
+    return responses
+
+
+
+@pytest.fixture
+def mock_user_true_false():
+    """
+    generator of set of user's collections for each question in test set
+    """
+    responses = []
+    for question in QUESTION_DATA:
+
+        question_id = question['id']
+        responses.append(UserResponse(
+            chosen_question_id = question_id  + 1
+            , chosen_answer_id = 1
+            ))
+    return responses
+
+
+
+@pytest.fixture
 def mock_test_service_instance_bounded(mock_test_service_instance, mock_current_user):
     test = mock_test_service_instance
     nick = mock_current_user.nick
     TestService.current_tests[nick] = test
+    return test
+
 
 @pytest.fixture
 def mock_random_questions(mocker, mock_test_service_instance):
