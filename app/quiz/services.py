@@ -166,7 +166,12 @@ class TestService:
         # true_ans = question.answers.ans_validation
         # pass= self.clean_text()
 
+        print('self.questions', self.questions, '\n\n')
+        print('self.questions[self.state - 1]', self.questions[self.state - 1], '\n\n')
         test_question = self.questions[self.state - 1]
+        print('question.chosen_question_id:', question.chosen_question_id, '\n\n')
+
+
         if test_question.question.id != question.chosen_question_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
