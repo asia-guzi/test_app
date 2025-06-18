@@ -264,7 +264,7 @@ class TestService:
             ,outcome = test_result.outcome)
 
         try:
-            session.add(to_db)
+            await session.add(to_db)
             await session.commit()
             await session.refresh(to_db)
         except SQLAlchemyError:

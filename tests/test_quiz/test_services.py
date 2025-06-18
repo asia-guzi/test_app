@@ -13,8 +13,10 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.exc import SQLAlchemyError
 from app.quiz.services import TestService
 from datetime import datetime
-from tests.test_quiz.helpers import get_AnsweredQuestion_schema, mock_user_responses_collection
+from tests.test_quiz.helpers import get_AnsweredQuestion_schema, mock_user_responses_collection, QUESTION_DATA
 
+print(QUESTION_DATA)
+print(len(QUESTION_DATA))
 
 # TEST_SIZE = default_test_size()
 #-- create_test
@@ -87,10 +89,23 @@ async def test_create_test_with_user(mock_async_session, mock_current_user, defa
 
 
 
+#casses - all wrong answers, all right answers, hal;f right answers
+@pytest.mark.parametrize('points, result', [(0, 0), (len(QUESTION_DATA), 100), (len(QUESTION_DATA)//2, round(len(QUESTION_DATA)//2*100/len(QUESTION_DATA),2))])
 @pytest.mark.asyncio
-async def test_submit_answer_success():
-    pass
+async def test_submit_answer_success(points, result, mock_db, mock_current_user, mock_test_service_instance_bounded, mock_async_session):
 
+
+    test = mock_test_service_instance_bounded
+
+    test.true_ans = points
+
+    await TestService.submit_test(mock_current_user.nick, mock_async_session)
+
+
+    print(mock_current_user.id)
+    outcome = (mock_db[mock_current_user.id])['outcome']
+    print(outcome)
+    assert result == outcome
 
 
 def test_validate_question_success(mock_user_true_responses,
@@ -114,55 +129,7 @@ def test_validate_question_fail(mock_user_true_false,
         assert isinstance(result.value, HTTPException)
         assert result.value.status_code == status.HTTP_400_BAD_REQUEST
 
-# async def test_validate_question_fail(question, collection, mock_test_service_instance_bounded, mock_current_user,
-#                                        data_for_tests, default_test_size):
-#     test = mock_test_service_instance_bounded
-#
-#     failed_result = test.validate_question()
-#
-#     test.state += 1
-#
-#     assert result is None
-#     assert isinstance(result, HTTPException)
-#     assert result == HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
-#
-# @pytest.mark.asyncio
-# def test_get_question_in_right_order_success(data_for_tests, mock_test_service_instance_bounded, mock_current_user, default_test_size):
-#     user = mock_current_user.nick
-#     test_instance = TestService.current_tests[user]
-#     test_raw_data = data_for_tests
-#
-#     size = default_test_size
-#     for id in range(size):
-#         result = await TestService.get_question(user, id+1)
-#         compare = test_raw_data[id]
-#
-#         test_instance.state += 1 # mock a part from tesrservice.submit_answer
-#         assert isinstance(result, GetQuestion)
-#         assert result.question == compare["question"]
-
-#
-# ----
-# def validate_question(self,  question : UserResponse)-> None:
-#         """
-#         if the proper question was answered - initiates answer validation
-#
-#         :param question: UserResponse
-#         :return: None
-#         """
-#
-#         # true_ans = question.answers.ans_validation
-#         # pass= self.clean_text()
-#
-#         test_question = self.questions[self.state - 1]
-#         if test_question.question.id != question.chosen_question_id:
-#             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-#
-#         self.validate_answer(test_question, question)
-#
-#         # if self.clean_text(question.response) == self.clean_text(true_answers):
-#         #     self.true_ans += 1 #if true add point to outcome
 
 
 @pytest.mark.parametrize('question, collection', mock_user_responses_collection())
@@ -189,7 +156,59 @@ def test_validate_answer_cases(question, collection, mock_test_service_instance_
     check_after_score = test.true_ans
     assert check_before_score == check_after_score
 
+  @classmethod
+    async def random_questions(cls
+                            ,session : AsyncSession
+                            , test_size : int
+                               #, user: User
+                            ) ->  'TestService':
+        """
+        Selects questions for db at random, and creates TestService instance for user
 
+        :param session : AsyncSession
+        :param test_size : int
+        :return: TestService
+        :raises HTTPException:
+            - 502 BAD GATEWAY in case of database error of any kind
+            - 404 NOT FOUND if for some reason there are more or less questions found in db then needed
+            - 500 INTERNAL SERVER ERROR if the retrieved data fails validation
+        """
+
+        try:
+            # select questions at random
+            result_dupl = await session.execute(
+                select(Question)
+                .order_by(func.random())  # Random question order
+                .limit(test_size)  # Number of questions
+                .options(joinedload(Question.answers))  # Eager loading answers
+            )
+            result = result_dupl.scalars().unique().all()
+
+        except SQLAlchemyError:
+            #would it be ok to add here wait_for_db()? -> to wait a moment for db before exception raise>?
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY
+                                ,detail="Failed to get the test questions from db")
+
+        if len(result) != TEST_SIZE:
+            #eg. not enough questions in db
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND
+                                ,detail="Test questions not found")
+
+
+        try:
+            # transform result for TestService purposes (validation based on Pydantic model
+            questions = [ AnsweredQuestion(
+                question=DbQuestion.model_validate(question),
+                answers=random.sample(
+                    [DbAnswer.model_validate(answer) for answer in question.answers],
+                    len(question.answers))
+                    # as (at least in sample data) always the first answer is true - change order
+                ) for question in result]
+        except ValidationError:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        #Validation of new test
+        return cls(questions=questions) #, user
 
 #
 # @pytest.mark.asyncio

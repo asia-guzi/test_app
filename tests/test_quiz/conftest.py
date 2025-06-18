@@ -6,7 +6,7 @@ from app.quiz.services import TestService
 from app.quiz.models import Question, Answer
 from app.quiz.schemas import UserResponse
 from tests.test_quiz.helpers import get_AnsweredQuestion_schema
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 
 from tests.test_quiz.helpers import QUESTION_DATA
@@ -102,36 +102,74 @@ def mock_random_questions(mocker, mock_test_service_instance):
     mock.return_value = mock_test_service_instance  # use mock_test_service
     return mock
 
+# @pytest.fixture
+# def mock_async_session(mocker, data_for_tests):
+#     questions = [
+#         Question(
+#             id=data["id"],
+#             question=data["question"],
+#             answers=[
+#                 Answer(
+#                     id=answer["id"],
+#                     answer=answer["answer"],
+#                     question_id=answer["question_id"],
+#                     ans_validation=answer["ans_validation"],
+#                 )
+#                 for answer in data["answers"]
+#             ],
+#         )
+#         for data in data_for_tests
+#     ]
+#
+#     mock_execute = mocker.AsyncMock()
+#     mock_scalars = mocker.MagicMock()
+#     mock_unique = mocker.MagicMock()
+#
+#     mock_unique.all.return_value = questions
+#     mock_scalars.unique.return_value = mock_unique
+#     mock_execute.scalars.return_value = mock_scalars
+#
+#     mock_session = mocker.MagicMock()
+#     mock_session.execute.return_value = mock_execute
+#     return mock_session
+
 @pytest.fixture
-def mock_async_session(mocker, data_for_tests):
-    questions = [
-        Question(
-            id=data["id"],
-            question=data["question"],
-            answers=[
-                Answer(
-                    id=answer["id"],
-                    answer=answer["answer"],
-                    question_id=answer["question_id"],
-                    ans_validation=answer["ans_validation"],
-                )
-                for answer in data["answers"]
-            ],
-        )
-        for data in data_for_tests
-    ]
+# Symulowana baza danych jako słownik
+def mock_db():
+    mock_db = {}
+    return mock_db
 
-    mock_execute = mocker.AsyncMock()
-    mock_scalars = mocker.MagicMock()
-    mock_unique = mocker.MagicMock()
+@pytest.fixture
+def mock_async_session(mocker, mock_db, data_for_tests):
+    # Tworzenie symulowanej sesji
+    session = AsyncMock()
+    mock_db = mock_db
+    # Symulacja metody add
+    async def add(instance):
+        # Dodanie instancji do symulowanej bazy danych
+        mock_db[instance.users_id] = {
+            'end_time': instance.end_time,
+            'start_time': instance.start_time,
+            'outcome': instance.outcome
+        }
 
-    mock_unique.all.return_value = questions
-    mock_scalars.unique.return_value = mock_unique
-    mock_execute.scalars.return_value = mock_scalars
+    session.add.side_effect = add
 
-    mock_session = mocker.MagicMock()
-    mock_session.execute.return_value = mock_execute
-    return mock_session
+    # Symulacja metody commit
+    async def commit():
+        pass  # Nic nie robi, bo dane są już w mock_db
+
+    session.commit.side_effect = commit
+
+    # Symulacja metody refresh
+    async def refresh(instance):
+        pass  # Nic nie robi, bo dane są już w mock_db
+
+    session.refresh.side_effect = refresh
+
+    return session
+
+
 
 # # Deliver TestService instance
 # @pytest.fixture
