@@ -27,7 +27,10 @@ def default_test_size(data_for_tests):
     """
     mock test size
     """
+
     return len(data_for_tests) # == len of questions_data im mock_test_service
+
+
 
 
 @pytest.fixture
@@ -140,7 +143,36 @@ def mock_db():
     return mock_db
 
 @pytest.fixture
-def mock_async_session(mocker, mock_db, data_for_tests):
+def mock_db_output(data_for_tests):
+
+    orm_questions = []
+
+    for q in data_for_tests:
+
+        answers = [
+            Answer(
+                id=ans["id"],
+                answer=ans["answer"],
+                question_id=ans["question_id"],
+                ans_validation=ans["ans_validation"],
+            )
+            for ans in q["answers"]
+        ]
+
+        # Tworzymy obiekt Question z przypisanymi odpowiedziami
+        question = Question(
+            id=q["id"],
+            question=q["question"],
+            answers=answers,  # Powiązujemy odpowiedzi z pytaniem (relacja ORM)
+        )
+
+        orm_questions.append(question)
+
+    return orm_questions
+
+
+@pytest.fixture
+def mock_async_session(mocker, mock_db, mock_db_output):
     # Tworzenie symulowanej sesji
     session = AsyncMock()
     mock_db = mock_db
@@ -166,6 +198,43 @@ def mock_async_session(mocker, mock_db, data_for_tests):
         pass  # Nic nie robi, bo dane są już w mock_db
 
     session.refresh.side_effect = refresh
+
+    async def execute(instance, *args, **kwargs):
+        # Dane testowe z "mockowanej bazy"
+        test_size = instance._limit_clause.value
+
+        # Symulacja losowego sortowania i limitu (func.random())
+        result = mock_db_output[:test_size]
+
+        # Tworzymy MockResult, który symuluje obiekt zwracany przez execute()
+        class MockResult():
+
+            def __init__(self, data):
+                self.data = data
+
+            def scalars(self):
+                return self  # Symulujemy chainable "scalars()"
+
+            def unique(self):
+                return self  # Symulujemy chainable "unique"
+
+            def all(self):
+                return self  # Zwraca listę tych przygotowanych danych testowych
+
+
+            def __len__(self):
+                return len(self.data)
+
+
+            def __iter__(self):
+                return iter(self.data)  # Pozwala na iterowanie po self.data
+
+        return MockResult(result)
+
+
+
+
+    session.execute.side_effect = execute
 
     return session
 
