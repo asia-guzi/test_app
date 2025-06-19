@@ -98,7 +98,7 @@ class TestService:
         :param session : AsyncSession
         :return: TestService
         """
-        test = await cls.random_questions(session=session)
+        test = await cls.random_questions(session=session, test_size=TEST_SIZE)
         cls.current_tests[user] = test
         return test
 
@@ -265,7 +265,7 @@ class TestService:
             ,outcome = test_result.outcome)
 
         try:
-            await session.add(to_db)
+            session.add(to_db)
             await session.commit()
             await session.refresh(to_db)
         except SQLAlchemyError:

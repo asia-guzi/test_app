@@ -6,6 +6,7 @@ services:
   backend:
     build:
       context: .
+    image: test_app_backend:1.0
     env_file:
       - .env
     container_name: test_app_backend
@@ -44,8 +45,10 @@ services:
   initial_populate:
     build:
       context: .
+    image: initial_populate:1.0
     env_file:
       - .env
+    container_name: initial_populate
     depends_on:
       - db
     environment:
@@ -57,7 +60,18 @@ services:
     command: >
       python3 app/initial_populate/initial.py
 
-
+  tests:
+    build:
+      context: .
+    image: tests:1.0
+    env_file:
+      - .env
+    container_name: tests
+#    depends_on:
+#      - backend
+#    environment:
+    command: >
+      pytest
 
 
 #    docker exec -it test_app_db mysql -u root -p
