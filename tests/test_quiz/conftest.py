@@ -6,7 +6,7 @@ from app.quiz.services import TestService
 from app.quiz.models import Question, Answer
 from app.quiz.schemas import UserResponse
 from tests.test_quiz.helpers import get_AnsweredQuestion_schema
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, Mock, AsyncMock
 
 
 from tests.test_quiz.helpers import QUESTION_DATA
@@ -137,7 +137,6 @@ def mock_random_questions(mocker, mock_test_service_instance):
 #     return mock_session
 
 @pytest.fixture
-# Symulowana baza danych jako słownik
 def mock_db():
     mock_db = {}
     return mock_db
@@ -172,13 +171,13 @@ def mock_db_output(data_for_tests):
 
 
 @pytest.fixture
-def mock_async_session(mocker, mock_db, mock_db_output):
+def mock_async_session(mocker, mock_db_output, mock_db):
     # Tworzenie symulowanej sesji
-    session = AsyncMock()
+    session = Mock()
     mock_db = mock_db
     # Symulacja metody add
-    async def add(instance):
-        # Dodanie instancji do symulowanej bazy danych
+    def add(instance):
+
         mock_db[instance.users_id] = {
             'end_time': instance.end_time,
             'start_time': instance.start_time,
@@ -187,17 +186,16 @@ def mock_async_session(mocker, mock_db, mock_db_output):
 
     session.add.side_effect = add
 
-    # Symulacja metody commit
     async def commit():
         pass  # Nic nie robi, bo dane są już w mock_db
 
-    session.commit.side_effect = commit
+    session.commit = AsyncMock(side_effect=commit)
 
     # Symulacja metody refresh
     async def refresh(instance):
         pass  # Nic nie robi, bo dane są już w mock_db
 
-    session.refresh.side_effect = refresh
+    session.refresh = AsyncMock(side_effect=refresh)
 
     async def execute(instance, *args, **kwargs):
         # Dane testowe z "mockowanej bazy"
@@ -234,7 +232,7 @@ def mock_async_session(mocker, mock_db, mock_db_output):
 
 
 
-    session.execute.side_effect = execute
+    session.execute = AsyncMock(side_effect=execute)
 
     return session
 
