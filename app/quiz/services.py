@@ -256,13 +256,12 @@ class TestService:
         except ValidationError:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-        # create a row
+            # create a row
         to_db = TestResult(
-            users_id = test_result.users_id
-            ,end_time = test_result.end_time
-            ,start_time = test_result.start_time
-            ,outcome = test_result.outcome)
+            users_id=test_result.users_id
+            , end_time=test_result.end_time
+            , start_time=test_result.start_time
+            , outcome=test_result.outcome)
 
         try:
             session.add(to_db)

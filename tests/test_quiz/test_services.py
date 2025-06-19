@@ -17,17 +17,6 @@ from app.quiz.services import TestService
 from datetime import datetime
 from tests.test_quiz.helpers import get_AnsweredQuestion_schema, mock_user_responses_collection, QUESTION_DATA
 
-print(QUESTION_DATA)
-print(len(QUESTION_DATA))
-
-# TEST_SIZE = default_test_size()
-#-- create_test
-# random_questions
-# get_question
-# submit_answer
-# validate_question
-# validate_answer
-# submit_test
 
 @pytest.mark.asyncio
 async def test_get_question_in_right_order_success(data_for_tests, mock_test_service_instance_bounded, mock_current_user, default_test_size):
@@ -104,9 +93,7 @@ async def test_submit_answer_success(points, result, mock_db, mock_current_user,
     await TestService.submit_test(mock_current_user.nick, mock_async_session)
 
 
-    print(mock_current_user.id)
     outcome = (mock_db[mock_current_user.id])['outcome']
-    print(outcome)
     assert result == outcome
 
 

@@ -4,7 +4,6 @@ from app.quiz.schemas import AnsweredQuestion, DbQuestion, DbAnswer
 from app.quiz.schemas import UserResponse
 import pytest
 
-
 QUESTION_DATA = [
     {
         "id": 1,
