@@ -58,12 +58,13 @@ class TestService:
                 .options(joinedload(Question.answers))  # Eager loading answers
             )
             result = result_dupl.scalars().unique().all()
-
+            print(result, 'result')
         except SQLAlchemyError:
             #would it be ok to add here wait_for_db()? -> to wait a moment for db before exception raise>?
             raise HTTPException(status.HTTP_502_BAD_GATEWAY
                                 ,detail="Failed to get the test questions from db")
 
+        print(TEST_SIZE, 'TEST_SIZE', len(result) , 'len(result) ')
         if len(result) != TEST_SIZE:
             #eg. not enough questions in db
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND
@@ -71,6 +72,7 @@ class TestService:
 
 
         try:
+
             # transform result for TestService purposes (validation based on Pydantic model
             questions = [ AnsweredQuestion(
                 question=DbQuestion.model_validate(question),
@@ -96,8 +98,7 @@ class TestService:
         :param session : AsyncSession
         :return: TestService
         """
-        test = await cls.random_questions(session=session,
-                                       test_size=TEST_SIZE)
+        test = await cls.random_questions(session=session)
         cls.current_tests[user] = test
         return test
 
@@ -264,7 +265,7 @@ class TestService:
             ,outcome = test_result.outcome)
 
         try:
-            session.add(to_db)
+            await session.add(to_db)
             await session.commit()
             await session.refresh(to_db)
         except SQLAlchemyError:

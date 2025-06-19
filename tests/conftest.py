@@ -22,6 +22,7 @@ def mock_current_user():
     deliver User instance
     """
     user = User(
+        id = 1,
         nick='test_nick',
         save_password='test_pass',
         name='test_name',

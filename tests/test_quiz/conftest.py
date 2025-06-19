@@ -6,7 +6,7 @@ from app.quiz.services import TestService
 from app.quiz.models import Question, Answer
 from app.quiz.schemas import UserResponse
 from tests.test_quiz.helpers import get_AnsweredQuestion_schema
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 
 from tests.test_quiz.helpers import QUESTION_DATA
@@ -27,7 +27,10 @@ def default_test_size(data_for_tests):
     """
     mock test size
     """
+
     return len(data_for_tests) # == len of questions_data im mock_test_service
+
+
 
 
 @pytest.fixture
@@ -102,36 +105,140 @@ def mock_random_questions(mocker, mock_test_service_instance):
     mock.return_value = mock_test_service_instance  # use mock_test_service
     return mock
 
+# @pytest.fixture
+# def mock_async_session(mocker, data_for_tests):
+#     questions = [
+#         Question(
+#             id=data["id"],
+#             question=data["question"],
+#             answers=[
+#                 Answer(
+#                     id=answer["id"],
+#                     answer=answer["answer"],
+#                     question_id=answer["question_id"],
+#                     ans_validation=answer["ans_validation"],
+#                 )
+#                 for answer in data["answers"]
+#             ],
+#         )
+#         for data in data_for_tests
+#     ]
+#
+#     mock_execute = mocker.AsyncMock()
+#     mock_scalars = mocker.MagicMock()
+#     mock_unique = mocker.MagicMock()
+#
+#     mock_unique.all.return_value = questions
+#     mock_scalars.unique.return_value = mock_unique
+#     mock_execute.scalars.return_value = mock_scalars
+#
+#     mock_session = mocker.MagicMock()
+#     mock_session.execute.return_value = mock_execute
+#     return mock_session
+
 @pytest.fixture
-def mock_async_session(mocker, data_for_tests):
-    questions = [
-        Question(
-            id=data["id"],
-            question=data["question"],
-            answers=[
-                Answer(
-                    id=answer["id"],
-                    answer=answer["answer"],
-                    question_id=answer["question_id"],
-                    ans_validation=answer["ans_validation"],
-                )
-                for answer in data["answers"]
-            ],
+# Symulowana baza danych jako słownik
+def mock_db():
+    mock_db = {}
+    return mock_db
+
+@pytest.fixture
+def mock_db_output(data_for_tests):
+
+    orm_questions = []
+
+    for q in data_for_tests:
+
+        answers = [
+            Answer(
+                id=ans["id"],
+                answer=ans["answer"],
+                question_id=ans["question_id"],
+                ans_validation=ans["ans_validation"],
+            )
+            for ans in q["answers"]
+        ]
+
+        # Tworzymy obiekt Question z przypisanymi odpowiedziami
+        question = Question(
+            id=q["id"],
+            question=q["question"],
+            answers=answers,  # Powiązujemy odpowiedzi z pytaniem (relacja ORM)
         )
-        for data in data_for_tests
-    ]
 
-    mock_execute = mocker.AsyncMock()
-    mock_scalars = mocker.MagicMock()
-    mock_unique = mocker.MagicMock()
+        orm_questions.append(question)
 
-    mock_unique.all.return_value = questions
-    mock_scalars.unique.return_value = mock_unique
-    mock_execute.scalars.return_value = mock_scalars
+    return orm_questions
 
-    mock_session = mocker.MagicMock()
-    mock_session.execute.return_value = mock_execute
-    return mock_session
+
+@pytest.fixture
+def mock_async_session(mocker, mock_db, mock_db_output):
+    # Tworzenie symulowanej sesji
+    session = AsyncMock()
+    mock_db = mock_db
+    # Symulacja metody add
+    async def add(instance):
+        # Dodanie instancji do symulowanej bazy danych
+        mock_db[instance.users_id] = {
+            'end_time': instance.end_time,
+            'start_time': instance.start_time,
+            'outcome': instance.outcome
+        }
+
+    session.add.side_effect = add
+
+    # Symulacja metody commit
+    async def commit():
+        pass  # Nic nie robi, bo dane są już w mock_db
+
+    session.commit.side_effect = commit
+
+    # Symulacja metody refresh
+    async def refresh(instance):
+        pass  # Nic nie robi, bo dane są już w mock_db
+
+    session.refresh.side_effect = refresh
+
+    async def execute(instance, *args, **kwargs):
+        # Dane testowe z "mockowanej bazy"
+        test_size = instance._limit_clause.value
+
+        # Symulacja losowego sortowania i limitu (func.random())
+        result = mock_db_output[:test_size]
+
+        # Tworzymy MockResult, który symuluje obiekt zwracany przez execute()
+        class MockResult():
+
+            def __init__(self, data):
+                self.data = data
+
+            def scalars(self):
+                return self  # Symulujemy chainable "scalars()"
+
+            def unique(self):
+                return self  # Symulujemy chainable "unique"
+
+            def all(self):
+                return self  # Zwraca listę tych przygotowanych danych testowych
+
+
+            def __len__(self):
+                return len(self.data)
+
+
+            def __iter__(self):
+                return iter(self.data)  # Pozwala na iterowanie po self.data
+
+        return MockResult(result)
+
+
+
+
+    session.execute.side_effect = execute
+
+    return session
+
+
 
 # # Deliver TestService instance
 # @pytest.fixture
