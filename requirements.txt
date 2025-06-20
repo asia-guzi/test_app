@@ -15,6 +15,7 @@ cryptography
 bcrypt
 pytest-mock
 pytest-asyncio
+black
 
 # pytest-asyncio
 # httpx

@@ -1,4 +1,3 @@
-
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import status
@@ -10,5 +9,6 @@ client = TestClient(app)
 def test_index():
     response = client.get(f"/")
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {'message' : 'Welcome to a test , after you log in there is 30 min to fulfill the test '}
-
+    assert response.json() == {
+        "message": "Welcome to a test , after you log in there is 30 min to fulfill the test "
+    }
