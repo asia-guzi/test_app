@@ -1,7 +1,15 @@
 from pydantic import ValidationError
 
 from app.quiz.models import Question, TestResult
-from app.quiz.schemas import AnsweredQuestion, UserResponse, DbAnswer, DbQuestion, GetQuestion, IdentifiedAnswer, TestOutcome
+from app.quiz.schemas import (
+    AnsweredQuestion,
+    UserResponse,
+    DbAnswer,
+    DbQuestion,
+    GetQuestion,
+    IdentifiedAnswer,
+    TestOutcome,
+)
 from app.quiz.config import TEST_SIZE
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
@@ -19,24 +27,20 @@ class TestService:
 
     current_tests = {}
 
-    def __init__(self,
-                 questions): # user: User):
+    def __init__(self, questions):  # user: User):
         self.questions = questions
         self.size = TEST_SIZE
         self.state = 1
         self.true_ans = 0
         self.start_time = datetime.now()
-        self.test_user = 1 # User
-        #self.id = test_set.id  # indywidualne id zeby zidentyfikowac set uzytkownika
-        #self.user_id = test_set.user_id - user as kwy in dict
-
+        self.test_user = 1  # User
 
     @classmethod
-    async def random_questions(cls
-                            ,session : AsyncSession
-                            , test_size : int
-                               #, user: User
-                            ) ->  'TestService':
+    async def random_questions(
+        cls,
+        session: AsyncSession,
+        test_size: int,
+    ) -> "TestService":
         """
         Selects questions for db at random, and creates TestService instance for user
 
@@ -58,37 +62,43 @@ class TestService:
                 .options(joinedload(Question.answers))  # Eager loading answers
             )
             result = result_dupl.scalars().unique().all()
-            print(result, 'result')
+            print(result, "result")
         except SQLAlchemyError:
-            #would it be ok to add here wait_for_db()? -> to wait a moment for db before exception raise>?
-            raise HTTPException(status.HTTP_502_BAD_GATEWAY
-                                ,detail="Failed to get the test questions from db")
+            raise HTTPException(
+                status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to get the test questions from db",
+            )
 
-        print(TEST_SIZE, 'TEST_SIZE', len(result) , 'len(result) ')
         if len(result) != TEST_SIZE:
-            #eg. not enough questions in db
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND
-                                ,detail="Test questions not found")
-
+            # eg. not enough questions in db
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Test questions not found"
+            )
 
         try:
 
             # transform result for TestService purposes (validation based on Pydantic model
-            questions = [ AnsweredQuestion(
-                question=DbQuestion.model_validate(question),
-                answers=random.sample(
-                    [DbAnswer.model_validate(answer) for answer in question.answers],
-                    len(question.answers))
-                    # as (at least in sample data) always the first answer is true - change order
-                ) for question in result]
+            questions = [
+                AnsweredQuestion(
+                    question=DbQuestion.model_validate(question),
+                    answers=random.sample(
+                        [
+                            DbAnswer.model_validate(answer)
+                            for answer in question.answers
+                        ],
+                        len(question.answers),
+                    ),
+                )
+                for question in result
+            ]
         except ValidationError:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        #Validation of new test
-        return cls(questions=questions) #, user
+        # Validation of new test
+        return cls(questions=questions)  # , user
 
     @classmethod
-    async def create_test(cls, user: str, session: AsyncSession) -> 'TestService':
+    async def create_test(cls, user: str, session: AsyncSession) -> "TestService":
         """
         Starts the process of TestService instance creation
         and binds particular TestService instance with user
@@ -102,43 +112,34 @@ class TestService:
         cls.current_tests[user] = test
         return test
 
-
-
     @classmethod
-    async def get_question(cls, user : str, id: int) -> Union[GetQuestion, RedirectResponse, HTTPException]:
+    async def get_question(
+        cls, user: str, id: int
+    ) -> Union[GetQuestion, RedirectResponse, HTTPException]:
 
         test = cls.current_tests[user]
 
-
         if id != test.state:
-            #if user tries to skip / go back to questoion
+            # if user tries to skip / go back to questoion
             error_message = "An attempt to skip or go back to question is not allowed"
             return RedirectResponse(url=f"/question/{test.state}?error={error_message}")
 
         if id <= test.size:
             # id is not out of range
-            test_question = test.questions[test.state -1]
-            return    GetQuestion(
-                #question=BaseQuestion.model_validate((test_question.question).question),
+            test_question = test.questions[test.state - 1]
+            return GetQuestion(
+                # question=BaseQuestion.model_validate((test_question.question).question),
                 id=test_question.question.id,
                 question=test_question.question.question,
-                response=[IdentifiedAnswer.model_validate(answer) for answer in test_question.answers]
-                #które by było lepsze, bo zakomwentowae na pewno jest jsonowe bardziej
-                #response=[answer.answer for answer in test_question.answers]
+                response=[
+                    IdentifiedAnswer.model_validate(answer)
+                    for answer in test_question.answers
+                ],
             )
 
-
-    # @staticmethod
-    # def clean_text(text):
-    #     # delete whitespaces
-    #     text = text.strip()
-    #     # transfer to lowercase
-    #     text = text.lower()
-    #     # leave only letters and digits
-    #     text = re.sub(r'[^\w]', '', text)
-    #     return text
-
-    def validate_answer(self, test_question: AnsweredQuestion, user_answer: UserResponse) -> None:
+    def validate_answer(
+        self, test_question: AnsweredQuestion, user_answer: UserResponse
+    ) -> None:
         """
         if user chose true answer, raises test outcome by 1 point
         (raises counter of true_ans in TestService instance)
@@ -149,14 +150,16 @@ class TestService:
         """
         # generator - as question has 1 true answer (usually first in list),
         # if answer is true <=> no point to look forward
-        true_id = next(answer.id for answer in test_question.answers if answer.ans_validation)
+        true_id = next(
+            answer.id for answer in test_question.answers if answer.ans_validation
+        )
 
         # if user chose true answer, raise test outcome by 1 point
         if true_id == user_answer.chosen_answer_id:
             # raise outcome if true answer
             self.true_ans += 1
 
-    def validate_question(self,  question : UserResponse)-> None:
+    def validate_question(self, question: UserResponse) -> None:
         """
         if the proper question was answered - initiates answer validation
 
@@ -164,25 +167,17 @@ class TestService:
         :return: None
         """
 
-        # true_ans = question.answers.ans_validation
-        # pass= self.clean_text()
-
-        print('self.questions', self.questions, '\n\n')
-        print('self.questions[self.state - 1]', self.questions[self.state - 1], '\n\n')
         test_question = self.questions[self.state - 1]
-        print('question.chosen_question_id:', question.chosen_question_id, '\n\n')
-
 
         if test_question.question.id != question.chosen_question_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
         self.validate_answer(test_question, question)
 
-        # if self.clean_text(question.response) == self.clean_text(true_answers):
-        #     self.true_ans += 1 #if true add point to outcome
-
     @classmethod
-    def submit_answer(cls, user: str, id: int, question : UserResponse) -> Union[RedirectResponse, HTTPException]:
+    def submit_answer(
+        cls, user: str, id: int, question: UserResponse
+    ) -> Union[RedirectResponse, HTTPException]:
         """
         initiates process of processing of particular question answered by user
 
@@ -197,38 +192,36 @@ class TestService:
 
             error_message = "An attempt to skip or go back to question is not allowed"
 
-            #redirect to proper question
-            #return RedirectResponse(url=f"/question/{test.state}?error={error_message}")
-            return RedirectResponse(f'/frontend/question/{test.state}?error={error_message}',
-                                    status_code=303) #status code ensures get method
+            # redirect to proper question
+            # return RedirectResponse(url=f"/question/{test.state}?error={error_message}")
+            return RedirectResponse(
+                f"/frontend/question/{test.state}?error={error_message}",
+                status_code=303,
+            )
 
-        #if question is of correct order, validate question and answer
+        # if question is of correct order, validate question and answer
         test.validate_question(question)
 
-        #after question is processed - move to the next question (by changing test.state in TestService instance)
+        # after question is processed - move to the next question (by changing test.state in TestService instance)
         test.state += 1
 
         if id < test.size:
-            #branch to follow if current question is NOT the last one of test
+            # branch to follow if current question is NOT the last one of test
             # redirects to url of next question
 
             # return RedirectResponse(f'/question/{id + 1}')
-            return RedirectResponse(f'/frontend/question/{id + 1}',
-                                    status_code=303)  # Wymusza metodę GET podczas przekierowania
+            return RedirectResponse(f"/frontend/question/{id + 1}", status_code=303)
 
         elif id == test.size:
-            #branch to follow if current question IS the last one of test
+            # branch to follow if current question IS the last one of test
 
             # redirects to url to handle test ending and submission
-            return RedirectResponse(url='/end_test',  status_code=303) # GET#, status_code=307)  # Zachowuje metodę POST)
-            # return JSONResponse(content={"redirect_url": "/end_test"}, status_code=200)
-            #json response, -> to try if it eliminates double submission during redirect - probably front problem
-
-        else: # test id out of range
+            return RedirectResponse(url="/end_test", status_code=303)
+        else:  # test id out of range
             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     @classmethod
-    async def submit_test(cls, user: str, session : AsyncSession) -> Dict:
+    async def submit_test(cls, user: str, session: AsyncSession) -> Dict:
         """
         function to count the outcome and save it into db
 
@@ -248,20 +241,22 @@ class TestService:
 
         try:
             # validate data based on schema
-            test_result =    TestOutcome(
-                users_id = test.test_user #.id
-                ,end_time = datetime.now()
-                ,start_time = test.start_time
-                ,outcome = outcome)
+            test_result = TestOutcome(
+                users_id=test.test_user,  # .id
+                end_time=datetime.now(),
+                start_time=test.start_time,
+                outcome=outcome,
+            )
         except ValidationError:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            # create a row
+        # create a row
         to_db = TestResult(
-            users_id=test_result.users_id
-            , end_time=test_result.end_time
-            , start_time=test_result.start_time
-            , outcome=test_result.outcome)
+            users_id=test_result.users_id,
+            end_time=test_result.end_time,
+            start_time=test_result.start_time,
+            outcome=test_result.outcome,
+        )
 
         try:
             session.add(to_db)
@@ -269,7 +264,8 @@ class TestService:
             await session.refresh(to_db)
         except SQLAlchemyError:
             # would it be ok to add here wait_for_db()? -> to wait a moment for db before exception raise>?
-            raise HTTPException(status.HTTP_502_BAD_GATEWAY
-                                , detail="Failed to save the test outcome")
+            raise HTTPException(
+                status.HTTP_502_BAD_GATEWAY, detail="Failed to save the test outcome"
+            )
 
         return {"message": f"test finished, your grade is {outcome} %"}

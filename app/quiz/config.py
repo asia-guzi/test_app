@@ -1,1 +1,1 @@
-TEST_SIZE = 1
+TEST_SIZE = 5

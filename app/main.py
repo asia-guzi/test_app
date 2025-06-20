@@ -13,12 +13,16 @@ app.mount("/app/static", StaticFiles(directory=static_dir), name="static")
 
 app.include_router(quiz_router)
 
-#to tylko w jednym miejscu i zosytawiam w config
+# to tylko w jednym miejscu i zosytawiam w config
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-@app.get('/')#needs log in form
-def index():
-    #insert click to route @app.get('/start')
-    return {'message' : 'Welcome to a test , after you log in there is 30 min to fulfill the test '}
-#(30 min token)
 
+@app.get("/")  # needs log in form
+def index():
+    # insert click to route @app.get('/start')
+    return {
+        "message": "Welcome to a test , after you log in there is 30 min to fulfill the test "
+    }
+
+
+# (30 min token)

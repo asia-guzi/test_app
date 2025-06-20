@@ -8,7 +8,7 @@ class BaseQuestion(BaseModel):
 
 
 class IdOfQuestion(BaseModel):
-    id: int #= Field(..., alias="id_q")  # "id" to alias
+    id: int
 
 
 class DbQuestion(BaseQuestion, IdOfQuestion):
@@ -16,15 +16,15 @@ class DbQuestion(BaseQuestion, IdOfQuestion):
         from_attributes = True
 
 
-class BaseAnswer (BaseModel):
+class BaseAnswer(BaseModel):
     answer: str
 
 
 class IdOfAnswer(BaseModel):
-    id: int #= Field(..., alias="id_a")  # "id" to alias
+    id: int
 
 
-class IdentifiedAnswer(BaseAnswer,IdOfAnswer):
+class IdentifiedAnswer(BaseAnswer, IdOfAnswer):
     pass
 
 
@@ -33,11 +33,11 @@ class DbAnswer(IdentifiedAnswer):
     ans_validation: bool
 
     class Config:
-        from_attributes = True  # Pozwala mapować odpowiedzi i pytania z ORM
+        from_attributes = True
 
 
 class GetQuestion(DbQuestion):
-    response: list[IdentifiedAnswer] #list[str]
+    response: list[IdentifiedAnswer]  # list[str]
 
 
 class UserResponse(BaseModel):
@@ -50,12 +50,11 @@ class AnsweredQuestion(BaseModel):
     answers: List[DbAnswer]
 
     class Config:
-        from_attributes = True  # Pozwala mapować odpowiedzi i pytania z ORM
+        from_attributes = True
 
 
 class TestOutcome(BaseModel):
-    users_id :int
-    end_time : datetime
-    start_time : datetime
-    outcome : float
-
+    users_id: int
+    end_time: datetime
+    start_time: datetime
+    outcome: float
