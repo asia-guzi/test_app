@@ -3,24 +3,6 @@
 version: '3.9'
 
 services:
-  backend:
-    build:
-      context: .
-    image: test_app_backend:1.0
-    env_file:
-      - .env
-    container_name: test_app_backend
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-    command: >
-      bash -c "uvicorn app.main:app --host 0.0.0.0 --port 8000"
-
-#    command: >
-#      bash -c "python3 initial_populate/initial.py && uvicorn main:app --host 0.0.0.0 --port 8000"
 
   db:
     image: mysql:8.0
@@ -59,19 +41,58 @@ services:
       DATABASE_NAME: ${MYSQL_DATABASE}
     command: >
       python3 app/initial_populate/initial.py
+    healthcheck:
+      test: [ "CMD", "pgrep", "python" ]  # check if python still runs processes
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  tests:
+
+  backend:
     build:
-      context: .
-    image: tests:1.0
+      context: ./backend
+      dockerfile: Dockerfile
     env_file:
       - .env
-    container_name: tests
-#    depends_on:
-#      - backend
-#    environment:
+    container_name: test_app_backend
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network  # Sieć do komunikacji z frontendem
+    depends_on:
+      initial_populate:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
     command: >
-      pytest
+      bash -c "uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:80"  # Frontend dostępny lokalnie na porcie 8080
+    networks:
+      - app-network  # Sieć do komunikacji z backendem
+
+  networks:
+    app-network:
+      driver: bridge
+
+#
+#  tests:
+#    build:
+#      context: .
+#    image: tests:1.0
+#    env_file:
+#      - .env
+#    container_name: tests
+##    depends_on:
+##      - backend
+##    environment:
+#    command: >
+#      pytest
 
 
 #    docker exec -it test_app_db mysql -u root -p
