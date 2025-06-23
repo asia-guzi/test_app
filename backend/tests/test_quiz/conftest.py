@@ -1,12 +1,12 @@
 import pytest
-from backend import TestService
-from backend import Question, Answer
-from backend import UserResponse
-from backend.tests.test_quiz.helpers import get_AnsweredQuestion_schema
+from app.quiz.services import TestService
+from app.quiz.models import Question, Answer
+from app.quiz.schemas import UserResponse
+from tests.test_quiz.helpers import get_AnsweredQuestion_schema
 from unittest.mock import patch, Mock, AsyncMock
 
 
-from backend.tests.test_quiz.helpers import QUESTION_DATA
+from tests.test_quiz.helpers import QUESTION_DATA
 
 
 @pytest.fixture

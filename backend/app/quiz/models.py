@@ -1,6 +1,6 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Float, Integer, String, ForeignKey, Boolean, DateTime
-from backend.app.db.config import Base
+from app.db.config import Base
 
 
 class Question(Base):

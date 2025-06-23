@@ -10,4 +10,6 @@ RUN rm -rf ./*
 # Skopiuj statyczne pliki frontendowe do kontenera
 COPY ./ /usr/share/nginx/html
 
-# Domyślnie Nginx działa na porcie 80 (nie musimy nic więcej robić)
+
+# Skopiuj nasz własny config dla Nginx
+COPY default.conf /etc/nginx/conf.d/default.conf

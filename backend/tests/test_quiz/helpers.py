@@ -1,6 +1,5 @@
 import random
-from backend import AnsweredQuestion, DbQuestion, DbAnswer
-from backend import UserResponse
+from app.quiz.schemas import AnsweredQuestion, DbQuestion, DbAnswer, UserResponse
 
 QUESTION_DATA = [
     {

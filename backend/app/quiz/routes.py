@@ -1,14 +1,14 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # from users.config import  oauth2_scheme
 from .services import TestService
 from .schemas import GetQuestion, UserResponse
-from backend.app.db.dependencies import get_session
+from app.db.dependencies import get_session
 from .config import TEST_SIZE
-from backend.app.users.models import User
+from app.users.models import User
 
 
 quiz_router = APIRouter(
@@ -36,21 +36,23 @@ async def start_tests(
             status_code=status.HTTP_404_NOT_FOUND, detail="Test not avaiable"
         )
 
-    return RedirectResponse(f'/question/{1}')
+    return JSONResponse({"next_question_id": 1})
+    # return JSONResponse(content={"redirect_url": "/question/1"})
+    # return RedirectResponse(f'/question/{1}')
     # return RedirectResponse(f"/frontend/question/{1}")
 
 
-@quiz_router.get("/frontend/question/{id}", tags=["quiz"])
-async def serve_static_question(id: int) -> RedirectResponse:
-    """
-    fetch random questions from the database, and initiate test for user
-
-    :param id: int - id passed as part of URL
-    :return: RedirectResponse - rout to the for the current front
-    """
-
-    url_with_id = f"/app/static/question.html?id={id}"
-    return RedirectResponse(url_with_id)
+# @quiz_router.get("/frontend/question/{id}", tags=["quiz"])
+# async def serve_static_question(id: int) -> RedirectResponse:
+#     """
+#     fetch random questions from the database, and initiate test for user
+#
+#     :param id: int - id passed as part of URL
+#     :return: RedirectResponse - rout to the for the current front
+#     """
+#
+#     url_with_id = f"/app/static/question.html?id={id}"
+#     return RedirectResponse(url_with_id)
 
 
 @quiz_router.get(

@@ -2,7 +2,7 @@ from sqlalchemy import String, Enum
 from sqlalchemy.orm import relationship
 
 from sqlalchemy import Column, Integer, Boolean
-from backend.app.db.config import Base
+from app.db.config import Base
 
 
 class User(Base):

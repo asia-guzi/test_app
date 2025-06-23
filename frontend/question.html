@@ -1,89 +1,111 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
     <title>Quiz Question</title>
 </head>
 <body>
     <div id="quiz-container">
-        <h2 id="question-text">Loading question...</h2>
-        <form id="quiz-form" action="#" method="POST">
-            <input type="hidden" id="question-id" name="chosen_question_id" value="">
+        <h2 id="question-text">Ładowanie pytania...</h2>
+        <form id="quiz-form">
+            <!-- ukryte faktyczne ID pytania z bazy -->
+            <input type="hidden" id="real-question-id" name="chosen_question_id" value="" />
             <div id="answers-container"></div>
-            <button type="submit">Submit</button>
+            <button type="submit">Wyślij odpowiedź</button>
         </form>
     </div>
 
     <script>
-        let test_state = null;
+        const backendBase = "http://localhost:8000";
 
-        const getTestStateFromSearchParams = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            return parseInt(urlParams.get('id'), 10) || null; // Pobiera "id" z URL
-        };
+        function getLogicalQuestionIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            return id ? parseInt(id, 10) : null;
+        }
 
-        const loadQuestion = async (test_state) => {
+        async function loadQuestion(logicalId) {
             try {
-                const response = await fetch(`/question/${test_state}`);
-                if (!response.ok) throw new Error("Failed to load the question.");
+                const res = await fetch(`${backendBase}/question/${logicalId}`);
+                if (!res.ok) throw new Error("Błąd ładowania pytania");
+                const data = await res.json();
 
-                const questionData = await response.json();
-                document.getElementById("question-text").textContent = questionData.question;
-                document.getElementById("question-id").value = questionData.id;
+                document.getElementById("question-text").textContent = data.question;
+                document.getElementById("real-question-id").value = data.id;
 
                 const answersContainer = document.getElementById("answers-container");
-                answersContainer.innerHTML = '';
-                questionData.response.forEach(answer => {
-                    const answerDiv = document.createElement('div');
-                    answerDiv.innerHTML = `
-                        <input type="radio" id="answer-${answer.id}" name="chosen_answer_id" value="${answer.id}">
+                answersContainer.innerHTML = "";
+
+                data.response.forEach(answer => {
+                    const div = document.createElement("div");
+                    div.innerHTML = `
+                        <input type="radio" id="answer-${answer.id}" name="chosen_answer_id" value="${answer.id}" />
                         <label for="answer-${answer.id}">${answer.answer}</label>
                     `;
-                    answersContainer.appendChild(answerDiv);
+                    answersContainer.appendChild(div);
                 });
-            } catch {
-                document.getElementById("question-text").textContent = "Error loading the question.";
+            } catch (error) {
+                document.getElementById("question-text").textContent = "Nie udało się załadować pytania.";
+                console.error(error);
             }
-        };
+        }
 
-        const handleSubmit = async (event) => {
+        async function handleSubmit(event) {
             event.preventDefault();
 
-            const backendQuestionId = document.getElementById("question-id").value;
-            const answerId = document.querySelector('input[name="chosen_answer_id"]:checked')?.value;
+            const logicalQuestionId = getLogicalQuestionIdFromUrl();
+            const realQuestionId = document.getElementById("real-question-id").value;
+            const selectedAnswer = document.querySelector('input[name="chosen_answer_id"]:checked');
 
-            if (!answerId) return;
+            if (!selectedAnswer) {
+                alert("Wybierz odpowiedź!");
+                return;
+            }
 
             const payload = {
-                chosen_question_id: parseInt(backendQuestionId, 10),
-                chosen_answer_id: parseInt(answerId, 10)
+                chosen_question_id: parseInt(realQuestionId, 10),
+                chosen_answer_id: parseInt(selectedAnswer.value, 10)
             };
 
             try {
-<!--                const response = await fetch(`/question/${test_state}`, {-->
-                    const response = await fetch(`http://backend:8000/question/${test_state}`);
-
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                const res = await fetch(`${backendBase}/question/${logicalQuestionId}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
                     body: JSON.stringify(payload)
                 });
 
-                if (response.redirected) {
-                    window.location.href = response.url; // Automatyczne przekierowanie
+                if (!res.ok) throw new Error("Błąd podczas wysyłania odpowiedzi");
+
+                const data = await res.json();
+
+                if (data.next_question_id) {
+                    window.location.href = `question.html?id=${data.next_question_id}`;
+                } else if (data.test_finished) {
+                    const resEnd = await fetch(`${backendBase}/end_test`);
+                    const endData = await resEnd.json();
+                    document.getElementById("quiz-container").innerHTML = `<h2>${endData.message}</h2>`;
+                } else {
+                    alert("Odpowiedź zapisana.");
                 }
-            } catch {
-                // Nic nie wyświetlamy na stronę — minimalizm
+
+            } catch (error) {
+                alert("Błąd podczas przesyłania odpowiedzi.");
+                console.error(error);
             }
-        };
+        }
 
-        const reloadQuestionOnNewURL = () => {
-            test_state = getTestStateFromSearchParams();
-            if (test_state !== null) loadQuestion(test_state);
-        };
+        window.addEventListener("DOMContentLoaded", () => {
+            const logicalId = getLogicalQuestionIdFromUrl();
+            if (logicalId) {
+                loadQuestion(logicalId);
+            } else {
+                document.getElementById("question-text").textContent = "Brak ID pytania w URL.";
+            }
 
-        window.addEventListener('DOMContentLoaded', reloadQuestionOnNewURL);
-        document.getElementById('quiz-form').addEventListener('submit', handleSubmit);
+            document.getElementById("quiz-form").addEventListener("submit", handleSubmit);
+        });
     </script>
 </body>
 </html>

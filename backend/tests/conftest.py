@@ -1,5 +1,5 @@
 # file for pytest to find fixtures
-from backend import User
+from app.users.models import User
 import pytest
 
 

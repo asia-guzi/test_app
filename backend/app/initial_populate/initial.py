@@ -1,11 +1,11 @@
 
 from typing import Optional
-from backend.app.db.config import async_engine, async_session, Base
-from backend.app.quiz.models import Question, Answer
+from app.db.config import async_engine, async_session, Base
+from app.quiz.models import Question, Answer
 from sqlalchemy.future import select
 import asyncio
-from backend.app.initial_populate.models import DbCreated
-from backend.app.users.models import User
+from app.initial_populate.models import DbCreated
+from app.users.models import User
 from datetime import datetime
 from sqlalchemy.exc import ProgrammingError, OperationalError
 from sqlalchemy import text

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Boolean, DateTime  # PrimaryKeyConstraint,
-from backend.app.db.config import Base
+from app.db.config import Base
 
 
 class DbCreated(Base):

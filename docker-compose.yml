@@ -7,6 +7,8 @@ services:
   db:
     image: mysql:8.0
     container_name: test_app_db
+    networks:
+      - app-network  # Sieć do komunikacji z frontendem
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -26,11 +28,13 @@ services:
 
   initial_populate:
     build:
-      context: .
-    image: initial_populate:1.0
+      context: ./backend
+      dockerfile: Dockerfile
     env_file:
       - .env
     container_name: initial_populate
+    networks:
+      - app-network  # Sieć do komunikacji z frontendem
     depends_on:
       - db
     environment:
@@ -41,12 +45,12 @@ services:
       DATABASE_NAME: ${MYSQL_DATABASE}
     command: >
       python3 app/initial_populate/initial.py
-    healthcheck:
-      test: [ "CMD", "pgrep", "python" ]  # check if python still runs processes
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+#    healthcheck:
+#      test: [ "CMD", "pgrep", "python" ]  # check if python still runs processes
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 10s
 
 
   backend:
@@ -61,8 +65,10 @@ services:
     networks:
       - app-network  # Sieć do komunikacji z frontendem
     depends_on:
-      initial_populate:
-        condition: service_healthy
+      - db
+      - initial_populate
+#      initial_populate:
+#        condition: service_healthy
     environment:
       DATABASE_URL: ${DATABASE_URL}
     command: >
@@ -71,14 +77,18 @@ services:
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "8080:80"  # Frontend dostępny lokalnie na porcie 8080
     networks:
       - app-network  # Sieć do komunikacji z backendem
+    depends_on:
+      - backend
 
-  networks:
-    app-network:
-      driver: bridge
+
+networks:
+  app-network:
+    driver: bridge
 
 #
 #  tests:

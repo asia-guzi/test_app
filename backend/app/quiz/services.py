@@ -1,7 +1,7 @@
 from pydantic import ValidationError
 
-from backend.app.quiz.models import Question, TestResult
-from backend.app.quiz.schemas import (
+from app.quiz.models import Question, TestResult
+from app.quiz.schemas import (
     AnsweredQuestion,
     UserResponse,
     DbAnswer,
@@ -10,13 +10,13 @@ from backend.app.quiz.schemas import (
     IdentifiedAnswer,
     TestOutcome,
 )
-from backend.app.quiz.config import TEST_SIZE
+from app.quiz.config import TEST_SIZE
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from datetime import datetime
 import random
 from typing import Dict, Union
@@ -62,7 +62,7 @@ class TestService:
                 .options(joinedload(Question.answers))  # Eager loading answers
             )
             result = result_dupl.scalars().unique().all()
-            print(result, "result")
+
         except SQLAlchemyError:
             raise HTTPException(
                 status.HTTP_502_BAD_GATEWAY,
@@ -209,14 +209,20 @@ class TestService:
             # branch to follow if current question is NOT the last one of test
             # redirects to url of next question
 
+            return JSONResponse({"next_question_id": id + 1})
             # return RedirectResponse(f'/question/{id + 1}')
-            return RedirectResponse(f"/frontend/question/{id + 1}", status_code=303)
+            # return RedirectResponse(f"/frontend/question/{id + 1}", status_code=303)
 
         elif id == test.size:
             # branch to follow if current question IS the last one of test
 
             # redirects to url to handle test ending and submission
-            return RedirectResponse(url="/end_test", status_code=303)
+            # return RedirectResponse(url="/end_test", status_code=303)
+            return JSONResponse(
+                status_code=200,
+                content={"test_finished": True}
+            )
+
         else:  # test id out of range
             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 

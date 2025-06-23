@@ -1,12 +1,12 @@
 from fastapi import HTTPException, status
 from unittest.mock import patch
 
-from backend import GetQuestion
+from app.quiz.schemas import GetQuestion
 
 import pytest
 from fastapi.responses import RedirectResponse
-from backend import TestService
-from backend.tests.test_quiz.helpers import (
+from app.quiz.services import TestService
+from tests.test_quiz.helpers import (
     get_AnsweredQuestion_schema,
     mock_user_responses_collection,
     QUESTION_DATA,

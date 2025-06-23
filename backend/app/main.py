@@ -1,10 +1,23 @@
 import os
 from fastapi import FastAPI
-from backend.app.quiz.routes import quiz_router
+from app.quiz.routes import quiz_router
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080"],  # adres twojego frontendu
+    allow_credentials=True,
+    allow_methods=["*"],  # dozwolone metody HTTP (GET, POST, itp)
+    allow_headers=["*"],  # dozwolone nagłówki HTTP
+    expose_headers=["Location"],  # <-- to jest kluczowe!
+
+)
+
+
 # Mount folder "static" jako miejsce, z którego serwowana będzie zawartość frontendu
 
 # # app.mount("/app/static", StaticFiles(directory="./static"), name="question") #works from here, does not work from tests

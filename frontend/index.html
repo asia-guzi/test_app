@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <title>Quiz Start</title>
+</head>
+<body>
+    <div id="message">Ładowanie...</div>
+    <button id="start-button">Start testu</button>
+
+    <script>
+        const backendBase = "http://localhost:8000";
+
+        async function loadWelcomeMessage() {
+            try {
+                const response = await fetch(`${backendBase}/`);
+                const data = await response.json();
+                document.getElementById("message").textContent = data.message;
+            } catch (error) {
+                document.getElementById("message").textContent = "Nie udało się załadować wiadomości powitalnej.";
+                console.error("Błąd ładowania wiadomości:", error);
+            }
+        }
+
+        async function handleStartClick() {
+            try {
+                const response = await fetch(`${backendBase}/start`);
+                if (!response.ok) throw new Error("Błąd startu testu");
+
+                const data = await response.json();
+                if (data.next_question_id) {
+                    window.location.href = `question.html?id=${data.next_question_id}`;
+                } else {
+                    alert("Brak dostępnych pytań.");
+                }
+            } catch (error) {
+                alert("Nie udało się rozpocząć testu.");
+                console.error(error);
+            }
+        }
+
+        document.getElementById("start-button").addEventListener("click", handleStartClick);
+        window.addEventListener("DOMContentLoaded", loadWelcomeMessage);
+    </script>
+</body>
+</html>
