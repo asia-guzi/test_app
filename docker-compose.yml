@@ -8,7 +8,7 @@ services:
     image: mysql:8.0
     container_name: test_app_db
     networks:
-      - app-network  # Sieć do komunikacji z frontendem
+      - app-network
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -17,42 +17,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-        - mysql_data:/var/lib/mysql  # trwałe dane bazy
-
-    #for now db only in container - defining volumes means that
-    #  dasta are stored not only in conytainer -> after dleete of contaoiner they will not be lost 4ever
-    #    volumes:
-    #      - mysql_data:/var/lib/mysql
-    #
-    #  mysql_data:
-    #    driver: local
-#
-#      initial_populate:
-#        build:
-#          context: ./backend
-#          dockerfile: Dockerfile
-#        env_file:
-#          - .env
-#        container_name: initial_populate
-#        networks:
-#          - app-network  # Sieć do komunikacji z frontendem
-#        depends_on:
-#          - db
-#        environment:
-#          DATABASE_HOST: db
-#          DATABASE_PORT: 3306
-#          DATABASE_USER:  ${MYSQL_USER}
-#          DATABASE_PASSWORD: ${MYSQL_PASSWORD}
-#          DATABASE_NAME: ${MYSQL_DATABASE}
-#        command: >
-#          python3 app/initial_populate/initial.py
-#    #    healthcheck:
-    #      test: [ "CMD", "pgrep", "python" ]  # check if python still runs processes
-    #      interval: 10s
-    #      timeout: 5s
-    #      retries: 5
-    #      start_period: 10s
-
+        - mysql_data:/var/lib/mysql
 
   backend:
     build:
@@ -68,7 +33,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./app_data:/test_app/data   # Tylko dane, nie kod
+      - ./app_data:/test_app/data
     environment:
       DATABASE_HOST: db
       DATABASE_PORT: 3306
@@ -82,35 +47,16 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "8080:80"  # Frontend dostępny lokalnie na porcie 8080
+      - "8080:80"
     networks:
-      - app-network  # Sieć do komunikacji z backendem
+      - app-network
     depends_on:
       - backend
-
 
 networks:
   app-network:
     driver: bridge
+
 volumes:
   mysql_data:
     driver: local
-
-#
-#  tests:
-#    build:
-#      context: .
-#    image: tests:1.0
-#    env_file:
-#      - .env
-#    container_name: tests
-##    depends_on:
-##      - backend
-##    environment:
-#    command: >
-#      pytest
-
-
-#    docker exec -it test_app_db mysql -u root -p
-
-
