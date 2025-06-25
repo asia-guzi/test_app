@@ -12,7 +12,7 @@ from app.users.models import User
 
 
 quiz_router = APIRouter(
-    tags=["quiz"]  # nie trzeba w kazdym z osobna, tylko mozna w routerze ustawic tags
+    # tags=["quiz"]
 )
 
 current_user = User(nick="nick", save_password="pass")
@@ -21,7 +21,7 @@ current_user = User(nick="nick", save_password="pass")
 @quiz_router.get("/start")
 async def start_tests(
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> RedirectResponse:
+) -> JSONResponse:
     """
     fetch random questions from the database, and initiate test for user
 
@@ -37,22 +37,6 @@ async def start_tests(
         )
 
     return JSONResponse({"next_question_id": 1})
-    # return JSONResponse(content={"redirect_url": "/question/1"})
-    # return RedirectResponse(f'/question/{1}')
-    # return RedirectResponse(f"/frontend/question/{1}")
-
-
-# @quiz_router.get("/frontend/question/{id}", tags=["quiz"])
-# async def serve_static_question(id: int) -> RedirectResponse:
-#     """
-#     fetch random questions from the database, and initiate test for user
-#
-#     :param id: int - id passed as part of URL
-#     :return: RedirectResponse - rout to the for the current front
-#     """
-#
-#     url_with_id = f"/app/static/question.html?id={id}"
-#     return RedirectResponse(url_with_id)
 
 
 @quiz_router.get(

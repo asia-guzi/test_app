@@ -3,29 +3,17 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
-class BaseQuestion(BaseModel):
+class DbQuestion(BaseModel):
+    id: int
     question: str
 
-
-class IdOfQuestion(BaseModel):
-    id: int
-
-
-class DbQuestion(BaseQuestion, IdOfQuestion):
     class Config:
         from_attributes = True
 
 
-class BaseAnswer(BaseModel):
-    answer: str
-
-
-class IdOfAnswer(BaseModel):
+class IdentifiedAnswer(BaseModel):
     id: int
-
-
-class IdentifiedAnswer(BaseAnswer, IdOfAnswer):
-    pass
+    answer: str
 
 
 class DbAnswer(IdentifiedAnswer):

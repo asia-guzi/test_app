@@ -6,10 +6,7 @@ sqlalchemy
 dotenv
 passlib[bcrypt]
 pyjwt
-ipython-sql
 pymysql
-notebook
-ipykernel
 asyncmy
 cryptography
 bcrypt
@@ -17,5 +14,3 @@ pytest-mock
 pytest-asyncio
 black
 
-# pytest-asyncio
-# httpx

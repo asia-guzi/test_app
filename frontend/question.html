@@ -6,12 +6,12 @@
 </head>
 <body>
     <div id="quiz-container">
-        <h2 id="question-text">Ładowanie pytania...</h2>
+        <h2 id="question-text">Question loading...</h2>
         <form id="quiz-form">
-            <!-- ukryte faktyczne ID pytania z bazy -->
+            <!-- do not show the real id -->
             <input type="hidden" id="real-question-id" name="chosen_question_id" value="" />
             <div id="answers-container"></div>
-            <button type="submit">Wyślij odpowiedź</button>
+            <button type="submit">Submit</button>
         </form>
     </div>
 
@@ -27,7 +27,7 @@
         async function loadQuestion(logicalId) {
             try {
                 const res = await fetch(`${backendBase}/question/${logicalId}`);
-                if (!res.ok) throw new Error("Błąd ładowania pytania");
+                if (!res.ok) throw new Error("Failed to load question");
                 const data = await res.json();
 
                 document.getElementById("question-text").textContent = data.question;
@@ -45,7 +45,7 @@
                     answersContainer.appendChild(div);
                 });
             } catch (error) {
-                document.getElementById("question-text").textContent = "Nie udało się załadować pytania.";
+                document.getElementById("question-text").textContent = "Failed to load question";
                 console.error(error);
             }
         }
@@ -58,7 +58,7 @@
             const selectedAnswer = document.querySelector('input[name="chosen_answer_id"]:checked');
 
             if (!selectedAnswer) {
-                alert("Wybierz odpowiedź!");
+                alert("Select answer");
                 return;
             }
 
@@ -76,7 +76,7 @@
                     body: JSON.stringify(payload)
                 });
 
-                if (!res.ok) throw new Error("Błąd podczas wysyłania odpowiedzi");
+                if (!res.ok) throw new Error("Failed to submit answer");
 
                 const data = await res.json();
 
@@ -87,11 +87,11 @@
                     const endData = await resEnd.json();
                     document.getElementById("quiz-container").innerHTML = `<h2>${endData.message}</h2>`;
                 } else {
-                    alert("Odpowiedź zapisana.");
+                    alert("Answer submited");
                 }
 
             } catch (error) {
-                alert("Błąd podczas przesyłania odpowiedzi.");
+                alert("Failed to submit answer");
                 console.error(error);
             }
         }
@@ -101,7 +101,7 @@
             if (logicalId) {
                 loadQuestion(logicalId);
             } else {
-                document.getElementById("question-text").textContent = "Brak ID pytania w URL.";
+                document.getElementById("question-text").textContent = "LAck of id in url";
             }
 
             document.getElementById("quiz-form").addEventListener("submit", handleSubmit);

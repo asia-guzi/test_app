@@ -1,17 +1,7 @@
-# file for pytest to find fixtures
 from app.users.models import User
 import pytest
 
 
-# @pytest.fixture
-# def mock_async_session(mocker):
-#     """
-#      mock async session
-#      """
-#     return mocker.MagicMock()
-
-
-# Deliver user
 @pytest.fixture
 def mock_current_user():
     """

@@ -1,4 +1,3 @@
-
 from typing import Optional
 from app.db.config import async_engine, async_session, Base
 from app.quiz.models import Question, Answer
@@ -360,5 +359,3 @@ async def insert_user(nick: str) -> Optional[User]:
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-

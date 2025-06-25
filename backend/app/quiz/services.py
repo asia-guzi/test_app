@@ -58,8 +58,8 @@ class TestService:
             result_dupl = await session.execute(
                 select(Question)
                 .order_by(func.random())  # Random question order
-                .limit(test_size)  # Number of questions
-                .options(joinedload(Question.answers))  # Eager loading answers
+                .limit(test_size)
+                .options(joinedload(Question.answers))
             )
             result = result_dupl.scalars().unique().all()
 
@@ -177,7 +177,7 @@ class TestService:
     @classmethod
     def submit_answer(
         cls, user: str, id: int, question: UserResponse
-    ) -> Union[RedirectResponse, HTTPException]:
+    ) -> Union[JSONResponse, HTTPException]:
         """
         initiates process of processing of particular question answered by user
 
@@ -187,17 +187,22 @@ class TestService:
         """
         test = cls.current_tests[user]
 
-        if id != test.state:
-            # if user tries to skip / go back to questoion
-
-            error_message = "An attempt to skip or go back to question is not allowed"
-
-            # redirect to proper question
-            # return RedirectResponse(url=f"/question/{test.state}?error={error_message}")
-            return RedirectResponse(
-                f"/frontend/question/{test.state}?error={error_message}",
-                status_code=303,
-            )
+        # if id != test.state:
+        #     # if user tries to skip / go back to questoion
+        #
+        #     error_message = "An attempt to skip or go back to question is not allowed"
+        #
+        #     return JSONResponse(
+        #         status_code=400,
+        #         content={"next_question_id": test.state}
+        #     )
+        #
+        #     # redirect to proper question
+        #     # return RedirectResponse(url=f"/question/{test.state}?error={error_message}")
+        #     return RedirectResponse(
+        #         f"/frontend/question/{test.state}?error={error_message}",
+        #         status_code=303,
+        #     )
 
         # if question is of correct order, validate question and answer
         test.validate_question(question)
@@ -208,20 +213,12 @@ class TestService:
         if id < test.size:
             # branch to follow if current question is NOT the last one of test
             # redirects to url of next question
-
             return JSONResponse({"next_question_id": id + 1})
-            # return RedirectResponse(f'/question/{id + 1}')
-            # return RedirectResponse(f"/frontend/question/{id + 1}", status_code=303)
 
         elif id == test.size:
             # branch to follow if current question IS the last one of test
-
             # redirects to url to handle test ending and submission
-            # return RedirectResponse(url="/end_test", status_code=303)
-            return JSONResponse(
-                status_code=200,
-                content={"test_finished": True}
-            )
+            return JSONResponse(status_code=200, content={"test_finished": True})
 
         else:  # test id out of range
             return HTTPException(status_code=status.HTTP_404_NOT_FOUND)

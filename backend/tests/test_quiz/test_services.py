@@ -208,7 +208,3 @@ async def test_random_questions_success(
 
         assert isinstance(result, TestService)
         assert len(result.questions) == test_size
-
-
-# @pytest.mark.asyncio
-# async def test_random_questions_not_enough_questions(self, mock_async_session):

@@ -12,7 +12,6 @@ class User(Base):
     nick = Column(String(50), nullable=False, unique=True)
     save_password = Column(String(64), nullable=False)
     name = Column(String(50))
-    # ddoac nullable false
     surname = Column(String(50))
     email = Column(String(50))
     role = Column(Enum("student", "teacher", name="role_enum"))  # 2 possible values
