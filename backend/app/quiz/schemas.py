@@ -1,9 +1,11 @@
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 
 class DbQuestion(BaseModel):
+    # ConfigDict(from_attributes=True)
+
     id: int
     question: str
 
@@ -17,6 +19,8 @@ class IdentifiedAnswer(BaseModel):
 
 
 class DbAnswer(IdentifiedAnswer):
+    # ConfigDict(from_attributes=True)
+
     question_id: int
     ans_validation: bool
 
@@ -34,6 +38,8 @@ class UserResponse(BaseModel):
 
 
 class AnsweredQuestion(BaseModel):
+    # ConfigDict(from_attributes=True)
+
     question: DbQuestion
     answers: List[DbAnswer]
 
