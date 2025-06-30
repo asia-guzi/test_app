@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <title>Quiz Question</title>
+</head>
+<body>
+    <div id="quiz-container">
+        <h2 id="question-text">Question loading...</h2>
+        <form id="quiz-form">
+            <!-- do not show the real id -->
+            <input type="hidden" id="real-question-id" name="chosen_question_id" value="" />
+            <div id="answers-container"></div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        const backendBase = "http://localhost:8000";
+
+        function getLogicalQuestionIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            return id ? parseInt(id, 10) : null;
+        }
+
+        async function loadQuestion(logicalId) {
+            try {
+                const res = await fetch(`${backendBase}/question/${logicalId}`);
+                if (!res.ok) throw new Error("Failed to load question");
+                const data = await res.json();
+
+                document.getElementById("question-text").textContent = data.question;
+                document.getElementById("real-question-id").value = data.id;
+
+                const answersContainer = document.getElementById("answers-container");
+                answersContainer.innerHTML = "";
+
+                data.response.forEach(answer => {
+                    const div = document.createElement("div");
+                    div.innerHTML = `
+                        <input type="radio" id="answer-${answer.id}" name="chosen_answer_id" value="${answer.id}" />
+                        <label for="answer-${answer.id}">${answer.answer}</label>
+                    `;
+                    answersContainer.appendChild(div);
+                });
+            } catch (error) {
+                document.getElementById("question-text").textContent = "Failed to load question";
+                console.error(error);
+            }
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const logicalQuestionId = getLogicalQuestionIdFromUrl();
+            const realQuestionId = document.getElementById("real-question-id").value;
+            const selectedAnswer = document.querySelector('input[name="chosen_answer_id"]:checked');
+
+            if (!selectedAnswer) {
+                alert("Select answer");
+                return;
+            }
+
+            const payload = {
+                chosen_question_id: parseInt(realQuestionId, 10),
+                chosen_answer_id: parseInt(selectedAnswer.value, 10)
+            };
+
+            try {
+                const res = await fetch(`${backendBase}/question/${logicalQuestionId}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) throw new Error("Failed to submit answer");
+
+                const data = await res.json();
+
+                if (data.next_question_id) {
+                    window.location.href = `question.html?id=${data.next_question_id}`;
+                } else if (data.test_finished) {
+                    const resEnd = await fetch(`${backendBase}/end_test`);
+                    const endData = await resEnd.json();
+                    document.getElementById("quiz-container").innerHTML = `<h2>${endData.message}</h2>`;
+                } else {
+                    alert("Answer submited");
+                }
+
+            } catch (error) {
+                alert("Failed to submit answer");
+                console.error(error);
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            const logicalId = getLogicalQuestionIdFromUrl();
+            if (logicalId) {
+                loadQuestion(logicalId);
+            } else {
+                document.getElementById("question-text").textContent = "LAck of id in url";
+            }
+
+            document.getElementById("quiz-form").addEventListener("submit", handleSubmit);
+        });
+    </script>
+</body>
+</html>

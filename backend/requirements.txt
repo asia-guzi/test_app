@@ -1,0 +1,16 @@
+fastapi[standard]
+uvicorn
+pydantic
+pytest
+sqlalchemy
+dotenv
+passlib[bcrypt]
+pyjwt
+pymysql
+asyncmy
+cryptography
+bcrypt
+pytest-mock
+pytest-asyncio
+black
+

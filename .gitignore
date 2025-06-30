@@ -2,8 +2,6 @@
 .idea
 .venv/
 venv/
-start_project/
-.idea/
 **/__pycache__/
 **/*.pyc
 
@@ -16,5 +14,4 @@ start_project/
 Thumbs.db
 
 # Wyklucz foldery
-
 __pycache__/
